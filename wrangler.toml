@@ -1,9 +1,10 @@
+# Cloudflare configuration. Deploy from the repository root:  npx wrangler deploy
 name = "tower-of-poop"
-main = "worker.js"
+main = "worker/worker.js"
 compatibility_date = "2025-02-24"
 
 [assets]
-directory = "./www"
+directory = "./worker/www"
 binding = "ASSETS"
 
 [[durable_objects.bindings]]

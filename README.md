@@ -14,6 +14,7 @@ The game is **a single HTML file** (`build/tower-of-poop.html`), generated from 
 | `src/build_imz.py`, `src/patch_v152.py` … `patch_v161.py` | apply story and modules on top of the base, one version at a time |
 | `tools/mktw.py` | creates `build/tw.html`, the build used by the automated tests |
 | `tools/release.py` | copies the game into the app (`worker/www`) and bumps the cache version |
+| `wrangler.toml` | Cloudflare configuration (name, Durable Objects, static assets) |
 | `worker/` | the Cloudflare server: serves the game, online co-op and anonymous stats |
 | `tests/` | automated tests with Playwright |
 
@@ -28,10 +29,10 @@ Requires Python 3 and Node.js.
 ```
 
 ## Publishing
-```bash
-cd worker
-npx wrangler deploy
-```
+The Cloudflare configuration (`wrangler.toml`) is at the repository root.
+
+- **Automatic (recommended):** connect this repository to a Worker in the Cloudflare dashboard (Workers & Pages → Create → Import a repository). Leave *Root directory* empty and *Build command* empty; *Deploy command* is `npx wrangler deploy`. Every push to `main` goes live.
+- **By hand:** from the repository root run `npx wrangler deploy`.
 First time: `npx wrangler login`. Stats stay closed until you set a password with `npx wrangler secret put STATS_KEY` (then `/stats?k=<password>`). Details in `worker/README.txt`.
 
 ## Tests
@@ -49,7 +50,7 @@ Screenshots go to `tests/out/`.
 
 ## Adding a version
 1. Create `src/patch_v162.py` following the previous ones (`rep(old, new, expected_count)`).
-2. `./build.sh 162`, test, then `cd worker && npx wrangler deploy`.
-3. Commit.
+2. `./build.sh 162` and test.
+3. Commit and push: Cloudflare deploys it.
 
 The full story and world rules live in the Lore Bible (separate document).

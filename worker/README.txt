@@ -4,11 +4,16 @@ TOWER OF POOP — app + online co-op + stats (Cloudflare Worker)
 This folder contains:
   www/           the game (installable app: page, service worker, manifest, fonts, icons)
   worker.js      the small server: serves the game, links the two co-op players, keeps anonymous stats
-  wrangler.toml  the Cloudflare configuration
+The Cloudflare configuration (wrangler.toml) is in the repository root.
+
+AUTOMATIC DEPLOY (no terminal)
+   Cloudflare dashboard -> Workers & Pages -> Create -> Import a repository -> this repo.
+   Root directory: empty.  Build command: empty.  Deploy command: npx wrangler deploy
+   Every push to main goes live in a couple of minutes.
 
 FIRST TIME (about 10 minutes)
 1) Install Node.js (LTS) from nodejs.org.
-2) Open Terminal (Mac) or PowerShell (Windows) inside this folder.
+2) Open Terminal (Mac) or PowerShell (Windows) in the repository root (the folder with wrangler.toml).
 3) Link your Cloudflare account:
        npx wrangler login
    (the browser opens: accept)
@@ -16,10 +21,10 @@ FIRST TIME (about 10 minutes)
        npx wrangler deploy
    The Worker is called "tower-of-poop", so it replaces the existing one and the
    address stays the same (tower-of-poop.<your-account>.workers.dev).
-   If your Worker has another name, change it on the first line of wrangler.toml.
+   If your Worker has another name, change the name line in wrangler.toml.
 
 LATER UPDATES
-   Rebuild with ../build.sh <version> (it refreshes www/), then:
+   Rebuild with ./build.sh <version> from the repository root (it refreshes worker/www), then:
        npx wrangler deploy
 
 PLAYING CO-OP
