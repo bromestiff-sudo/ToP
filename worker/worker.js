@@ -151,7 +151,14 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px 6px;b
 }
 
 // ---------- security headers on every page the Worker serves ----------
+// link previews (WhatsApp, X, Telegram...) need absolute addresses: fill them in from the address the page is served on
+function absolutize(res, url) {
+  if (!(res.headers.get('Content-Type') || '').includes('text/html') || typeof HTMLRewriter === 'undefined') return res;
+  const fix = { element(e) { const c = e.getAttribute('content'); if (c && c.startsWith('/')) e.setAttribute('content', url.origin + c); } };
+  return new HTMLRewriter().on('meta[property^="og:"]', fix).on('meta[name^="twitter:"]', fix).transform(res);
+}
 function secure(res, url) {
+  res = absolutize(res, url);
   const r = new Response(res.body, res), h = r.headers;
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');

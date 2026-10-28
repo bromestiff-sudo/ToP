@@ -8,6 +8,8 @@ keep_vars = true
 [assets]
 directory = "./worker/www"
 binding = "ASSETS"
+# send every request through worker.js first (security headers, link previews); it then serves the files
+run_worker_first = true
 
 [[durable_objects.bindings]]
 name = "ROOMS"
