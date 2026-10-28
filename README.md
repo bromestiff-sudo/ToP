@@ -1,55 +1,55 @@
 # Tower of Poop
 
-Roguelike dall'alto in pixel art: un rotolo di carta igienica contro una torre di cacca e le sue galline.
-Sembra un gioco per bambini. Non lo è.
+Top-down pixel-art roguelike: a roll of toilet paper against a tower of poop and its hens.
+It looks like a kids' game. It isn't.
 
-## Come è fatto
-Il gioco è **un solo file HTML** (`build/tower-of-poop.html`), generato dai sorgenti in `src/`:
+## How it is built
+The game is **a single HTML file** (`build/tower-of-poop.html`), generated from the sources in `src/`:
 
-| Cartella | Cosa c'è |
+| Folder | Contents |
 |---|---|
-| `src/base/base-v150.html` | il gioco alla versione 150, da cui parte ogni build |
-| `src/story.py`, `src/imz1-6.py`, `src/mem.py`, `src/endx.py` | storia, capitoli, intermezzi e ricordi (EN/IT/ES) |
-| `src/*.js` | i moduli aggiunti dopo la 150: motore della storia, ricordi, progressione, regole dei boss, personaggi, minigiochi, attacchi nuovi, statistiche |
-| `src/build_imz.py`, `src/patch_v152.py` … `patch_v161.py` | applicano storia e moduli sopra la base, una versione alla volta |
-| `tools/mktw.py` | crea `build/tw.html`, la build per i test automatici |
-| `tools/release.py` | copia il gioco nella app (`worker/www`) e alza la versione della cache |
-| `worker/` | il server Cloudflare: serve il gioco, la co-op online e le statistiche anonime |
-| `tests/` | test automatici con Playwright |
+| `src/base/base-v150.html` | the game at version 150, the starting point of every build |
+| `src/story.py`, `src/imz1-6.py`, `src/mem.py`, `src/endx.py` | story, chapters, interludes and memories (EN/IT/ES) |
+| `src/*.js` | modules added after 150: story engine, memories, progression, boss rules, characters, minigames, new attacks, stats |
+| `src/build_imz.py`, `src/patch_v152.py` … `patch_v161.py` | apply story and modules on top of the base, one version at a time |
+| `tools/mktw.py` | creates `build/tw.html`, the build used by the automated tests |
+| `tools/release.py` | copies the game into the app (`worker/www`) and bumps the cache version |
+| `worker/` | the Cloudflare server: serves the game, online co-op and anonymous stats |
+| `tests/` | automated tests with Playwright |
 
-Ogni patch cerca un pezzo di codice preciso e controlla di trovarlo il numero giusto di volte: se qualcosa non torna, la build si ferma invece di produrre un gioco rotto.
+Every patch looks for an exact piece of code and checks it finds it the expected number of times: if something doesn't match, the build stops instead of producing a broken game.
 
-## Costruire il gioco
-Servono Python 3 e Node.js.
+## Building
+Requires Python 3 and Node.js.
 
 ```bash
 ./build.sh          # build/tower-of-poop.html + build/tw.html
-./build.sh 162      # in più aggiorna worker/www alla versione 162
+./build.sh 162      # also refreshes worker/www to version 162
 ```
 
-## Pubblicare
+## Publishing
 ```bash
 cd worker
 npx wrangler deploy
 ```
-La prima volta: `npx wrangler login`. Le statistiche sono chiuse finché non imposti una password con `npx wrangler secret put STATS_KEY` (poi `/stats?k=<password>`). Dettagli in `worker/LEGGIMI.txt`.
+First time: `npx wrangler login`. Stats stay closed until you set a password with `npx wrangler secret put STATS_KEY` (then `/stats?k=<password>`). Details in `worker/README.txt`.
 
-## Test
+## Tests
 ```bash
 npm i -D playwright && npx playwright install chromium
 ./build.sh
-node tests/chr.js        # personaggi
-node tests/act.js        # atti della storia
-node tests/memt.js       # ricordi al fuoco
-node tests/tr.js         # traduzioni
-node tests/atk2.js 0,1,2,21   # attacchi dei boss (indici dei boss)
-node tests/worker.test.mjs    # protezioni del Worker
+node tests/chr.js        # characters
+node tests/act.js        # story acts
+node tests/memt.js       # memories by the fire
+node tests/tr.js         # translations
+node tests/atk2.js 0,1,2,21   # boss attacks (boss indexes)
+node tests/worker.test.mjs    # Worker protections
 ```
-Gli screenshot finiscono in `tests/out/`.
+Screenshots go to `tests/out/`.
 
-## Aggiungere una versione
-1. Crea `src/patch_v162.py` sul modello delle precedenti (`rep(vecchio, nuovo, quante_volte)`).
-2. `./build.sh 162`, prova, poi `cd worker && npx wrangler deploy`.
+## Adding a version
+1. Create `src/patch_v162.py` following the previous ones (`rep(old, new, expected_count)`).
+2. `./build.sh 162`, test, then `cd worker && npx wrangler deploy`.
 3. Commit.
 
-La storia completa e le regole del mondo sono nella Lore Bible (documento separato su Claude).
+The full story and world rules live in the Lore Bible (separate document).

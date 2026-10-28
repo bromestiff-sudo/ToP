@@ -111,22 +111,22 @@ function statsPage(S) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const tbl = (title, m, lim = 30) => { const r = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, lim), mx = Math.max(1, ...r.map(x => x[1]));
     return `<section><h2>${title}</h2>` + (r.length ? r.map(([k, v]) => `<div class=row><span>${esc(k)}</span><i style="width:${Math.round(v / mx * 100)}%"></i><b>${v}</b></div>`).join('') : '<p class=m>—</p>') + '</section>'; };
-  const fl = {}; for (let i = 0; i <= 8; i++) if (S.floors[i]) fl['piano ' + i] = S.floors[i];
+  const fl = {}; for (let i = 0; i <= 8; i++) if (S.floors[i]) fl['floor ' + i] = S.floors[i];
   const days = Object.entries(S.days).sort().reverse().slice(0, 14).map(([d, v]) => `<tr><td>${d}</td><td>${v.s}</td><td>${v.e}</td></tr>`).join('');
-  const last = S.last.slice(0, 30).map(r => `<tr><td>${r.d}</td><td>${esc(r.m)}</td><td>${esc(r.c)}</td><td>${r.f}</td><td>${r.w ? 'vittoria' : esc(r.k)}</td><td>${Math.round(r.s / 60)} min</td><td>${r.a}</td><td>${esc(r.l)}</td></tr>`).join('');
-  const errs = Object.entries(S.errs || {}).sort((a, b) => b[1] - a[1]).slice(0, 25).map(([k, v]) => `<div class=row><span title="${esc(k)}">${esc(k)}</span><i style="width:${Math.round(v / Math.max(1, ...Object.values(S.errs)) * 100)}%"></i><b>${v}</b></div>`).join('') || '<p class=m>nessun errore</p>';
+  const last = S.last.slice(0, 30).map(r => `<tr><td>${r.d}</td><td>${esc(r.m)}</td><td>${esc(r.c)}</td><td>${r.f}</td><td>${r.w ? 'win' : esc(r.k)}</td><td>${Math.round(r.s / 60)} min</td><td>${r.a}</td><td>${esc(r.l)}</td></tr>`).join('');
+  const errs = Object.entries(S.errs || {}).sort((a, b) => b[1] - a[1]).slice(0, 25).map(([k, v]) => `<div class=row><span title="${esc(k)}">${esc(k)}</span><i style="width:${Math.round(v / Math.max(1, ...Object.values(S.errs)) * 100)}%"></i><b>${v}</b></div>`).join('') || '<p class=m>no errors</p>';
   const avg = S.ends ? Math.round(S.secs / S.ends / 60) : 0;
-  return `<!doctype html><html lang=it><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Tower of Poop · statistiche</title>
+  return `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Tower of Poop · stats</title>
 <style>body{margin:0;background:#140a0c;color:#efe6d8;font:15px/1.4 system-ui,sans-serif}main{max-width:900px;margin:auto;padding:20px 16px}h1{color:#ecd078;margin:0 0 4px}h2{font-size:14px;color:#ff8a7a;text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
 .k{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0}.k div{background:#24121a;border-radius:8px;padding:10px}.k b{display:block;font-size:24px;color:#ecd078}.k span{font-size:12px;color:#b8a898}
 .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}section{background:#1e0f15;border-radius:8px;padding:12px}.row{display:grid;grid-template-columns:minmax(0,1fr) 90px 40px;gap:8px;align-items:center;font-size:13px;margin:3px 0}.row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row i{display:block;height:8px;background:#a01f2f;border-radius:4px}.row b{text-align:right}
 table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px 6px;border-bottom:1px solid #33202a;text-align:left}.m,.n{color:#b8a898;font-size:12px}.w{overflow-x:auto}</style>
-<main><h1>Tower of Poop</h1><p class=n>Statistiche anonime dal ${new Date(S.since).toISOString().slice(0, 10)}. Nessun dato personale: solo partite, piani, personaggi e boss. JSON: <a style="color:#7fd8ff" href="?format=json">?format=json</a></p>
-<div class=k><div><b>${S.starts}</b><span>partite iniziate</span></div><div><b>${S.ends}</b><span>partite finite</span></div><div><b>${S.wins}</b><span>vittorie</span></div><div><b>${avg} min</b><span>durata media</span></div><div><b>${S.starts ? Math.round(S.touch / S.starts * 100) : 0}%</b><span>da touch</span></div></div>
-<div class=g>${tbl('Piano raggiunto', fl)}${tbl('Ucciso da', S.causes, 15)}${tbl('Personaggio', S.chars)}${tbl('Boss battuti', S.bosses, 40)}${tbl('Modalità', S.modes)}${tbl('Atto', S.acts)}${tbl('Lingua', S.langs)}${tbl('Versione', S.vers)}</div>
-<section style="margin-top:14px"><h2>Errori dei giocatori</h2>${errs}</section>
-<section style="margin-top:14px"><h2>Ultimi giorni</h2><div class=w><table><tr><th>giorno</th><th>iniziate</th><th>finite</th></tr>${days}</table></div></section>
-<section style="margin-top:14px"><h2>Ultime partite</h2><div class=w><table><tr><th>giorno</th><th>modo</th><th>pers.</th><th>piano</th><th>esito</th><th>durata</th><th>atto</th><th>lingua</th></tr>${last}</table></div></section></main></html>`;
+<main><h1>Tower of Poop</h1><p class=n>Anonymous stats since ${new Date(S.since).toISOString().slice(0, 10)}. No personal data: only runs, floors, characters and bosses. JSON: <a style="color:#7fd8ff" href="?format=json">?format=json</a></p>
+<div class=k><div><b>${S.starts}</b><span>runs started</span></div><div><b>${S.ends}</b><span>runs finished</span></div><div><b>${S.wins}</b><span>wins</span></div><div><b>${avg} min</b><span>average length</span></div><div><b>${S.starts ? Math.round(S.touch / S.starts * 100) : 0}%</b><span>on touch</span></div></div>
+<div class=g>${tbl('Floor reached', fl)}${tbl('Killed by', S.causes, 15)}${tbl('Character', S.chars)}${tbl('Bosses beaten', S.bosses, 40)}${tbl('Mode', S.modes)}${tbl('Act', S.acts)}${tbl('Language', S.langs)}${tbl('Version', S.vers)}</div>
+<section style="margin-top:14px"><h2>Player errors</h2>${errs}</section>
+<section style="margin-top:14px"><h2>Last days</h2><div class=w><table><tr><th>day</th><th>started</th><th>finished</th></tr>${days}</table></div></section>
+<section style="margin-top:14px"><h2>Last runs</h2><div class=w><table><tr><th>day</th><th>mode</th><th>char</th><th>floor</th><th>result</th><th>length</th><th>act</th><th>lang</th></tr>${last}</table></div></section></main></html>`;
 }
 
 // ---------- security headers on every page the Worker serves ----------
@@ -162,14 +162,14 @@ export default {
     }
     if (url.pathname === '/stats') {
       // the page is closed until a password exists:  npx wrangler secret put STATS_KEY
-      if (!env.STATS_KEY) return plain('Le statistiche sono chiuse. Imposta una password con:  npx wrangler secret put STATS_KEY  e poi apri /stats?k=<password>', 403);
+      if (!env.STATS_KEY) return plain('Stats are closed. Set a password with:  npx wrangler secret put STATS_KEY  then open /stats?k=<password>', 403);
       const k = url.searchParams.get('k');
       if (k != null) {   // the password goes into a cookie and leaves the address bar
-        if (!same(k, env.STATS_KEY)) return plain('Password sbagliata.', 403);
+        if (!same(k, env.STATS_KEY)) return plain('Wrong password.', 403);
         return new Response(null, { status: 303, headers: { Location: '/stats' + (url.searchParams.get('format') === 'json' ? '?format=json' : ''), 'Set-Cookie': 'tops=' + (await sha('stats:' + env.STATS_KEY)) + '; Path=/stats; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000', 'Cache-Control': 'no-store' } });
       }
       const ck = (req.headers.get('Cookie') || '').match(/(?:^|;\s*)tops=([0-9a-f]+)/);
-      if (!ck || !same(ck[1], await sha('stats:' + env.STATS_KEY))) return plain('Apri /stats?k=<password> per entrare.', 403);
+      if (!ck || !same(ck[1], await sha('stats:' + env.STATS_KEY))) return plain('Open /stats?k=<password> to sign in.', 403);
       const r = await env.STATS.get(env.STATS.idFromName('all')).fetch(new Request(url.toString(), { method: 'GET' }));
       return secure(r, url);
     }

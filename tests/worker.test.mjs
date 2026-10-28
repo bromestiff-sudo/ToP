@@ -16,7 +16,7 @@ const S=store.get('s');console.log('causes keys',Object.keys(S.causes).length,'f
 console.log('stats no cookie',await r(W.fetch(new Request(U+'/stats'),env)));
 const k=await W.fetch(new Request(U+'/stats?k=pw123'),env);console.log('login',k.status,k.headers.get('Location'),k.headers.get('Set-Cookie').slice(0,40));
 const ck=k.headers.get('Set-Cookie').split(';')[0];
-const pg=await W.fetch(new Request(U+'/stats',{headers:{Cookie:ck}}),env);const tx=await pg.text();console.log('page',pg.status,tx.includes('Errori dei giocatori'),tx.includes('&lt;script'),pg.headers.get('Content-Security-Policy').slice(0,40));
+const pg=await W.fetch(new Request(U+'/stats',{headers:{Cookie:ck}}),env);const tx=await pg.text();console.log('page',pg.status,tx.includes('Player errors'),tx.includes('&lt;script'),pg.headers.get('Content-Security-Policy').slice(0,40));
 console.log('wrong pw',await r(W.fetch(new Request(U+'/stats?k=nope'),env)));
 const nokey={...env,STATS_KEY:undefined};console.log('no key',await r(W.fetch(new Request(U+'/stats'),nokey)));
 const g=await W.fetch(new Request(U+'/'),env);console.log('game headers',g.headers.get('X-Content-Type-Options'),g.headers.get('Content-Security-Policy').includes('wss://top.test'));
