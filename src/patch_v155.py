@@ -1,0 +1,32 @@
+F='../build/tower-of-poop.html';s=open(F).read()
+def rep(a,b,cnt=1):
+    global s
+    n=s.count(a);assert n==cnt,(a[:70],n);s=s.replace(a,b)
+eng=open('engine3.js').read()
+rep('function playScene(',eng+'function playScene(')
+rep("  if(built('pantry'))G.soap+=2;if(built('infirmary')){G.hpMax++;G.hp++;}if(built('armory')){M.ammoMul=(M.ammoMul||1)*1.25;for(const w of WEAPONS)if(w.ammo||w.cap)G.ammo[w.id]=ammoMax(w);}\n  if(built('forge'))G.dmgMul*=1.1;if(built('chapel'))G.chapel=true;","  upgApply(M);")
+rep("function built(id){return (SV.built||[]).includes(id);}","function built(id){const m={pantry:'soap',infirmary:'hp',armory:'ammo',tower:'map',forge:'dmg',chapel:'revive'};return upL(m[id]||id)>=1;}")
+rep("if(r.boss&&SV.built&&SV.built.includes('tower'))return true;","if(r.boss&&upL('map')>=1)return true;")
+rep("if(G.hp<=0&&G.chapel){G.chapel=false;","if(G.hp<=0&&G.chapel>0){G.chapel--;")
+rep("else if(p.id==='build')buildMenu();","else if(p.id==='build')upgMenu();")
+rep("const t=v*1.2+(G.cornFr||0)","const t=v*1.2*(1+.15*(G.cornUp||0))+(G.cornFr||0)")
+rep("G.hp<G.hpMax&&Math.random()<.09&&!A(9))drop('coffee'","G.hp<G.hpMax&&Math.random()<.09+.04*(G.healUp||0)&&!A(9))drop('coffee'")
+rep("else if(r<.037&&G.hp<G.hpMax&&!G.hard)","else if(r<.037+.006*(G.healUp||0)&&G.hp<G.hpMax&&!G.hard)")
+# pay for the climb
+rep("&&!G.qm&&G.floor>=1){SV.deaths=(SV.deaths||0)+1;","&&!G.qm&&G.floor>=1){SV.deaths=(SV.deaths||0)+1;{const bonus=2+(G.floor-1)*3;SV.credits=(SV.credits||0)+bonus;SV.runBonus=[bonus,G.floor];}")
+rep("try{memNotice();}catch(e){}},2400);}","try{if(runBonusNotice())setTimeout(()=>{try{memNotice();}catch(e){}},2900);else memNotice();}catch(e){}},2400);}")
+# orders
+rep("function enterHub(msg,sub){au();palUse(0,0);","function enterHub(msg,sub){au();palUse(0,0);try{ordFill();}catch(e){}")
+rep("  {id:'fire',label:'CAMPFIRE',","  {id:'orders',label:'ORDERS',x:104,y:146,w:30,h:18,lx:119,ly:124,hot:'#7fd8ff'},\n  {id:'fire',label:'CAMPFIRE',")
+rep("if(p.id==='fire'){fireTalk();return;}","if(p.id==='fire'){fireTalk();return;}if(p.id==='orders'){ordMenu();return;}")
+rep("drawHubGrowth(t);drawFireFolk();","drawHubGrowth(t);drawFireFolk();drawOrderBoard(false,t);")
+rep("if(f>SV.maxL){SV.maxL=f;saveSV();}G.df=","if(f>SV.maxL){SV.maxL=f;saveSV();}try{ordEvent('reach',f);}catch(e){}G.df=")
+rep("G.roomHit=true;","G.roomHit=true;if(G.boss)G.boss.tookHit=1;")
+rep("  if(b.hp<=0){try{SV.bk=SV.bk||{};if(b.art)SV.bk[b.art]=1;}catch(e){}","  if(b.hp<=0){try{SV.bk=SV.bk||{};if(b.art)SV.bk[b.art]=1;if(!b.mini&&!b.fb){ordEvent('boss',G.floor);if(!b.tookHit)ordEvent('bossclean',G.floor);}}catch(e){}")
+rep("if(!SV.tags.includes(id)){SV.tags.push(id);saveSV();","if(!SV.tags.includes(id)){SV.tags.push(id);saveSV();try{ordEvent('free');}catch(e){}")
+rep("if(pc>=.999&&!G.ex100){G.ex100=1;","if(pc>=.999&&!G.ex100){G.ex100=1;try{ordEvent('clean100');}catch(e){}")
+rep("function killEnemy(e){e.dead=true;","function killEnemy(e){e.dead=true;try{if(!e.dummy){G.okills=(G.okills||0)+1;if(G.okills%10===0)ordEvent('kills',G.okills);}}catch(e2){}")
+rep("G.streak=(G.streak||0)+1;","G.streak=(G.streak||0)+1;try{ordEvent('streak',G.streak);}catch(e){}")
+# dictionary for the new pad labels
+rep('const ESV=','Object.assign(IT,{"ORDERS":"ORDINI","WORKSHOP":"CANTIERE"});Object.assign(ES,{"ORDERS":"ÓRDENES","WORKSHOP":"TALLER"});\nconst ESV=')
+open(F,'w').write(s);print('v155 ok')

@@ -1,0 +1,25 @@
+import W,{Stats,Room} from '../worker/worker.js';
+const store=new Map();const st={storage:{get:async k=>store.get(k),put:async(k,v)=>store.set(k,v)}};const SO=new Stats(st);
+const env={STATS_KEY:'pw123',STATS:{idFromName:()=>1,get:()=>SO},ASSETS:{fetch:async()=>new Response('<html>game</html>',{headers:{'Content-Type':'text/html'}})}};
+const U='https://top.test';const post=(o,h={})=>W.fetch(new Request(U+'/api/stats',{method:'POST',headers:{'Origin':U,'CF-Connecting-IP':'1.2.3.4',...h},body:typeof o==='string'?o:JSON.stringify(o)}),env);
+const r=async p=>{const x=await p;return x.status+':'+(await x.text()).slice(0,30)};
+console.log('start',await r(post({t:'start',mode:'normal',char:'two',lang:'it',act:1,v:161,touch:true})));
+console.log('end',await r(post({t:'end',mode:'normal',char:'two',floor:3,win:false,cause:'SHADOW HEN',bosses:['BIG MAMA CLUCK'],secs:500,act:1,lang:'it',v:161})));
+console.log('junk name',await r(post({t:'end',mode:'normal',char:'x',floor:99,win:false,cause:'<script>alert(1)</script>',bosses:['<b>x</b>','lowercase'],secs:1e9,lang:'it',v:161})));
+console.log('bad mode',await r(post({t:'start',mode:'hack',lang:'it'})));
+console.log('err',await r(post({t:'err',msg:'TypeError: x is null',at:'7:123',v:161})));
+console.log('big',await r(post('{"t":"start","pad":"'+'a'.repeat(10000)+'"}')));
+console.log('foreign origin',await r(post({t:'start',mode:'normal',lang:'it'},{'Origin':'https://evil.test'})));
+let last;for(let i=0;i<45;i++)last=await r(post({t:'start',mode:'normal',lang:'en',v:161},{'CF-Connecting-IP':'9.9.9.9'}));console.log('flood',last);
+for(let i=0;i<300;i++)await post({t:'end',mode:'normal',floor:1,cause:'NAME '+i,lang:'en',v:161},{'CF-Connecting-IP':'10.0.'+i});
+const S=store.get('s');console.log('causes keys',Object.keys(S.causes).length,'floors',JSON.stringify(S.floors),'rejected',S.rejected,'errs',JSON.stringify(S.errs),'secs',S.secs);
+console.log('stats no cookie',await r(W.fetch(new Request(U+'/stats'),env)));
+const k=await W.fetch(new Request(U+'/stats?k=pw123'),env);console.log('login',k.status,k.headers.get('Location'),k.headers.get('Set-Cookie').slice(0,40));
+const ck=k.headers.get('Set-Cookie').split(';')[0];
+const pg=await W.fetch(new Request(U+'/stats',{headers:{Cookie:ck}}),env);const tx=await pg.text();console.log('page',pg.status,tx.includes('Errori dei giocatori'),tx.includes('&lt;script'),pg.headers.get('Content-Security-Policy').slice(0,40));
+console.log('wrong pw',await r(W.fetch(new Request(U+'/stats?k=nope'),env)));
+const nokey={...env,STATS_KEY:undefined};console.log('no key',await r(W.fetch(new Request(U+'/stats'),nokey)));
+const g=await W.fetch(new Request(U+'/'),env);console.log('game headers',g.headers.get('X-Content-Type-Options'),g.headers.get('Content-Security-Policy').includes('wss://top.test'));
+// relay limits
+const sent=[];const a={send:m=>sent.push(m),close:(c)=>sent.push('closed '+c)},b={send:m=>sent.push('b:'+m),close:(c)=>sent.push('bclosed '+c)};
+const R=new Room({getWebSockets:()=>[a,b]});R.webSocketMessage(a,'x'.repeat(600000));for(let i=0;i<305;i++)R.webSocketMessage(b,'hi');console.log('relay',sent.filter(s=>s.startsWith('closed')||s.startsWith('bclosed')),sent.filter(s=>s==='hi').length);

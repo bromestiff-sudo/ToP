@@ -1,0 +1,18 @@
+F='../build/tower-of-poop.html';s=open(F).read()
+def rep(a,b,cnt=1):
+    global s
+    n=s.count(a);assert n==cnt,(a[:70],n);s=s.replace(a,b)
+rep('G.spd*1.0815','G.spd*1.2978',3)
+rep('P.ddx*235;vy=P.ddy*235','P.ddx*270;vy=P.ddy*270',2)
+rep("palUse(G.zone,G.pv);","palUse(G.zone,G.pv);G.macabre=G.hub?0:(G.qm?(storyAct()>=2?1:0):macLevel());",2)
+rep("{const ez=easyF();G.cad/=ez;G.sm*=(ez<1?.92:1);G.df*=(ez<1?.94:1);}","{const ez=easyF();G.cad/=ez;G.sm*=(ez<1?.92:1);G.df*=(ez<1?.94:1);}if(!G.rush&&!G.surv&&!G.train){G.df*=1.2;G.sm*=1.15;G.cad*=.8;}")
+rep("G.floor===1?.8:G.floor===2?.88:1","G.floor===1?.9:G.floor===2?.95:1")
+rep("n=Math.min(28,13+Math.round(level*2))","n=Math.min(22,9+Math.round(level*2))")
+rep("r<.042&&G.hp<G.hpMax&&!G.hard","r<.037&&G.hp<G.hpMax&&!G.hard")
+rep("G.hp<G.hpMax&&Math.random()<.15&&!A(9))drop('coffee'","G.hp<G.hpMax&&Math.random()<.09&&!A(9))drop('coffee'")
+rep("P.inv=(SV.opts.easy?1.6:1.0)*","P.inv=(SV.opts.easy?1.6:.8)*")
+rep("const s=SPR.poop[e.type],fr=Math.floor(e.t*(e.type==='fly'?16:5))%2,im=s[fr];","const s=SPR.poop[e.type],fr=Math.floor(e.t*(e.type==='fly'?16:5))%2,im=G.macabre?macSpr(e.type,fr):s[fr];")
+rep("k=pg?pg[1]:(GR[zone]||GR[0])[1]","k=(pg?pg[1]:(GR[zone]||GR[0])[1])*(1-.022*Math.min(zone,7))*(G&&G.macabre?.88:1)")
+rep("function qOn(){return G&&!G.hub&&!G.qm&&!G.rush&&!G.surv&&!G.train&&!G.coopGuest;}","function qOn(){return G&&!G.hub&&!G.qm&&!G.rush&&!G.surv&&!G.train&&!G.coopGuest&&storyAct()>=2;}")
+rep("  else offerTut(1400);}","  else offerTut(1400);setTimeout(()=>{try{actCheck();}catch(e){}},2400);}")
+open(F,'w').write(s);print('ok')

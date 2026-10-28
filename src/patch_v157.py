@@ -1,0 +1,15 @@
+F='../build/tower-of-poop.html';s=open(F).read()
+def rep(a,b,cnt=1):
+    global s
+    n=s.count(a);assert n==cnt,(a[:70],n);s=s.replace(a,b)
+br=open('bossrules.js').read()
+rep('function playScene(',br+'function playScene(')
+rep("BOSS_AI[b.idx](b,dt,P,ang,rage,easy?sm*.87:sm,R);G.bossFiring=false;","BOSS_AI[b.idx](b,dt,P,ang,rage,easy?sm*.87:sm,R);G.bossFiring=false;try{bossRuleTick(b,dt);}catch(e){}")
+rep("b.flash>0||(b.state==='tele'&&Math.floor(G.time*16)%2));ctx.globalAlpha=1;}\nfunction curRoom()","b.flash>0||(b.state==='tele'&&Math.floor(G.time*16)%2));ctx.globalAlpha=1;try{bossRuleDraw(b);}catch(e){}}\nfunction curRoom()")
+rep("  ctx.restore();\n  // markers for poop outside the view","  ctx.restore();\n  try{bossDarkDraw(cx,cy);}catch(e){}\n  // markers for poop outside the view")
+rep("    const cap=b.maxhp/(b.fb?14:20);","    {const d2=bossRuleDmg(b,d);if(d2<=0){if(Math.random()<.12){SFX.tink();}return true;}d=d2;}\n    const cap=b.maxhp/(b.fb?14:20);")
+rep("function explodeSoap0(b){","function explodeSoap0(b){G.lastSoap={x:b.x,y:b.y,t:G.time};")
+rep("G.streak=0;G.hp--;","G.streak=0;G.hp--;try{const B=G.boss;if(B&&B.art==='fox'&&B.state!=='dying'){B.hp=Math.min(B.maxhp,B.hp+B.maxhp*.05);popText(B.x,B.y-28,'+5%','#ff4a5a');}}catch(e){}")
+rep("const BPOOL=[0,1,2,3,4,5,6].map(t=>BOSSDEFS.map((d,i)=>i).filter(i=>BOSSDEFS[i].tier===t&&!BOSSDEFS[i].secret&&!BOSSDEFS[i].mini));","const BPOOL=[0,1,2,3,4,5,6].map(t=>BOSSDEFS.map((d,i)=>i).filter(i=>BOSSDEFS[i].tier===t&&!BOSSDEFS[i].secret&&!BOSSDEFS[i].mini&&!(i>=7&&i<=20)));")
+rep("for(const k of ['sponge','plunger','toiletNPC','locker'])SPR[k]=A3(k)[0];","for(const k of ['sponge','plunger','toiletNPC','locker'])SPR[k]=A3(k)[0];try{for(let i=0;i<6;i++){const a=henArt(i,0),c=henArt(i,1);SPR.boss[i]=[a,c,a,c];}}catch(e){}")
+open(F,'w').write(s);print('v157 ok')

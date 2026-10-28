@@ -1,0 +1,24 @@
+const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+const p=await b.newPage({viewport:{width:844,height:390},deviceScaleFactor:2,hasTouch:true,isMobile:true});const errs=[];p.on('pageerror',e=>errs.push(e.message+' '+(e.stack||'').split('\n')[1]));
+await p.goto('file://'+require('path').resolve(__dirname,'../build/tw.html'));await p.waitForTimeout(800);await p.evaluate(()=>{localStorage.clear();localStorage.setItem('top_lang','it')});await p.reload();await p.waitForTimeout(1500);
+await p.evaluate(()=>{const T=__T;T.S.mode='title';T.SV.metKeeper=true;T.SV.tutDone=true;T.newGame();T.newGame();});await p.waitForTimeout(1500);
+const r1=await p.evaluate(()=>{const T=__T;T.SV.run=null;T.SV.introV=6;T.startRun(1);T.S.mode='play';const G=T.G;G.hp=G.hpMax=6;const r=G.m.rooms.find(r=>r.kind==='imzroom');const k=G.picks.find(k=>k.t==='imzspot');if(r){G.P.x=r.cx;G.P.y=r.cy+40;G.camSnap=true;r.visited=true;}return [!!r,!!k,k&&[k.x,k.y]];});
+console.log('room/spot',JSON.stringify(r1));await p.waitForTimeout(1200);await p.screenshot({path:__dirname+'/out/mem_spot.png'});
+await p.evaluate(()=>{const G=__T.G,k=G.picks.find(k=>k.t==='imzspot');G.P.x=k.x;G.P.y=k.y;});await p.waitForTimeout(800);
+console.log('mode',await p.evaluate(()=>[__T.S.mode,__T.S.scene&&__T.S.scene.lines.map(l=>l[1].slice(0,30))]));await p.screenshot({path:__dirname+'/out/mem_spotline.png'});
+await p.evaluate(()=>{__T.S.scene.after();});console.log('pend',await p.evaluate(()=>JSON.stringify(__T.SV.memPend)));
+await p.evaluate(()=>{__T.SV.run=null;__T.enterHub();});await p.waitForTimeout(3200);
+await p.evaluate(()=>{const G=__T.G;G.P.x=200;G.P.y=150;G.camSnap=true;});await p.waitForTimeout(600);await p.screenshot({path:__dirname+'/out/mem_hub.png'});
+await p.evaluate(()=>{__T.fireTalk();});await p.waitForTimeout(300);await p.screenshot({path:__dirname+'/out/mem_hook.png'});
+await p.evaluate(()=>{__T.S.scene.after();});await p.waitForTimeout(200);await p.evaluate(()=>{const s=__T.S.scene;s.i=4;s.ch=999;});await p.waitForTimeout(300);await p.screenshot({path:__dirname+'/out/mem_flash.png'});
+await p.evaluate(()=>{__T.S.scene.after();});await p.waitForTimeout(300);console.log('after flash',await p.evaluate(()=>[__T.S.mode,__T.S.menu&&__T.S.menu.title]));await p.screenshot({path:__dirname+'/out/mem_choice.png'});
+await p.evaluate(()=>{__T.S.menu.items[1].act();});await p.evaluate(()=>{__T.S.scene.after();});console.log('back',await p.evaluate(()=>[__T.S.mode,JSON.stringify(__T.SV.imzc),JSON.stringify(__T.SV.imzs)]));
+// colonel
+await p.evaluate(()=>{__T.SV.memPend=[[2,2]];});await p.waitForTimeout(400);await p.screenshot({path:__dirname+'/out/mem_hub2.png'});
+await p.evaluate(()=>{__T.fireTalk();__T.S.scene.after();});await p.waitForTimeout(200);await p.evaluate(()=>{__T.S.scene.after();});await p.waitForTimeout(200);
+console.log('i2 menu',await p.evaluate(()=>[__T.S.mode,__T.S.menu&&__T.S.menu.title]));await p.evaluate(()=>{__T.S.menu.items[1].act();});await p.evaluate(()=>{__T.S.scene.after();});
+console.log('colPend',await p.evaluate(()=>[__T.S.mode,JSON.stringify(__T.SV.colPend)]));await p.waitForTimeout(400);await p.screenshot({path:__dirname+'/out/mem_hub3.png'});
+await p.evaluate(()=>{__T.fireTalk();});await p.waitForTimeout(300);await p.screenshot({path:__dirname+'/out/mem_col.png'});console.log(await p.evaluate(()=>__T.S.scene.lines.map(l=>l[0]+':'+l[1].slice(0,30))));
+await p.evaluate(()=>{__T.S.scene.after();__T.enterMess();});await p.waitForTimeout(800);await p.evaluate(()=>{const G=__T.G;G.P.x=312;G.P.y=210;G.camSnap=true;});await p.waitForTimeout(500);await p.screenshot({path:__dirname+'/out/mem_mess.png'});
+await p.evaluate(()=>{__T.openPad();});await p.waitForTimeout(300);await p.screenshot({path:__dirname+'/out/mem_games.png'});console.log(await p.evaluate(()=>[__T.S.mode,__T.S.menu&&__T.S.menu.items.map(i=>i.label).join('|')]));
+console.log(errs);await b.close();})();

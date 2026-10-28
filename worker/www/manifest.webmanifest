@@ -1,0 +1,38 @@
+{
+ "name": "Tower of Poop",
+ "short_name": "Tower of Poop",
+ "id": "/",
+ "start_url": "/",
+ "scope": "/",
+ "display": "standalone",
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
+ "orientation": "landscape",
+ "background_color": "#0e0805",
+ "theme_color": "#0e0805",
+ "lang": "it",
+ "categories": [
+  "games"
+ ],
+ "description": "Un roguelike sparatutto: un rotolo di carta igienica contro la torre-pollaio.",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
