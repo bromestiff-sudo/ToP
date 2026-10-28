@@ -173,7 +173,7 @@ try{const nz=e=>{e.preventDefault();};['gesturestart','gesturechange','gestureen
   if(window.visualViewport){visualViewport.addEventListener('resize',unzoom);visualViewport.addEventListener('scroll',()=>{if(visualViewport.scale>1.01)unzoom();});}
   addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0);},{passive:true});}catch(e){}
 // ← Put the public URL of the game here so tweets link back to it
-const GAME_URL='https://tower-of-poop.bromestiff.workers.dev/';
+const GAME_URL='';
 
 const FONTK=1.15;let FADE=0;let TOPI=0,HX=0,H=320,W=320,Z=1.12,VW=286,VH=286,KUI=1,KW=1;const TS=16,CW=20,CH=16,TAU=Math.PI*2,INF=65535;
 const cv=document.getElementById('game');
@@ -4844,7 +4844,7 @@ if(document.documentElement.requestFullscreen){fsBtn.hidden=false;fsBtn.addEvent
 const shareA=document.getElementById('share'),tpN=document.getElementById('tpN'),soapN=document.getElementById('soapN'),wallBtn=document.getElementById('wallBtn'),soapBtn=document.getElementById('soapBtn');
 function updateShare(){const f=G?G.floor:best.floor,s=G?G.score:best.score;
   const txt=LG==='it'?(f?`Il Serg. Doppiovelo è arrivato al piano ${f} di Tower of Poop con ${s} punti 🧻🐔 Riesci a battere la Regina Cacca?`:`La Gallina ha fatto la cacca su ogni piano del pollaio in Tower of Poop 🧻🐔 Prendi uno spruzzino e ripulisci:`):(f?`Sgt. Two-Ply fought his way up to ${f<=3?'the farm':'floor '+(f-3)} of the Tower of Poop with ${s} points 🧻🐔 Can you beat the Poop Queen?`:`The Hen pooped on every level of the coop in Tower of Poop 🧻🐔 Grab a spray and clean it up:`);
-  shareA.href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(GAME_URL);}
+  shareA.href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+(gameLink()?'&url='+encodeURIComponent(gameLink()):'');}
 updateShare();
 // Install card. Android/Chrome/Edge/Samsung: one button opens the browser's own "install app" dialog (beforeinstallprompt).
 // iPhone: no API exists, so the card explains Share > Add to Home Screen.
@@ -5441,7 +5441,8 @@ function drawComic(c,exp){const K=S.comic||{};if(!K.caps)return;const t=(perform
   rect(c,10,262,130,22,'#ffe14a');ctxt(c,it?'📷 SALVA FUMETTO':T_('📷 SAVE COMIC'),75,268,'#1a0e06','center',8,null);
   rect(c,148,262,130,22,'#2a1a10');rect(c,148,262,130,1,'#6a4a30');ctxt(c,it?'CONTINUA ▸':T_('CONTINUE ▸'),213,268,'#c8b090','center',8,null);
   if(K.msg)ctxt(c,K.msg,144,250,'#7fd8ff','center',7,'#000');}
-function shareHost(){try{if(/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.host))return location.host;}catch(e){}return GAME_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');}
+function gameLink(){try{if(/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.host))return location.origin+'/';}catch(e){}return GAME_URL;}
+function shareHost(){return gameLink().replace(/^https?:\/\//,'').replace(/\/$/,'');}
 function exportComic(){const K=S.comic;if(!K)return;const c2=document.createElement('canvas');c2.width=c2.height=288*3;const g=c2.getContext('2d');g.imageSmoothingEnabled=false;g.setTransform(3,0,0,3,0,0);drawComic(g,true);
   const it=LG==='it',text=it?'La mia partita a Tower of Poop, a fumetti 🧻🐔':T_('My Tower of Poop run, as a comic 🧻🐔');
   c2.toBlob(async b=>{if(!b)return;
