@@ -2,6 +2,8 @@
 name = "tower-of-poop"
 main = "worker/worker.js"
 compatibility_date = "2025-02-24"
+# keep variables set in the Cloudflare dashboard (e.g. STATS_KEY) when deploying
+keep_vars = true
 
 [assets]
 directory = "./worker/www"
