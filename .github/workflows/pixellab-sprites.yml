@@ -1,0 +1,64 @@
+# Redraws a group of sprites with PixelLab and saves them on a separate branch for review.
+# Setup once: repository secret PIXELLAB_SECRET (your PixelLab API key).
+# Run: Actions -> "Generate sprites with PixelLab" -> Run workflow.
+name: Generate sprites with PixelLab
+on:
+  workflow_dispatch:
+    inputs:
+      group:
+        description: "Folder in art/reference (characters, hens, bosses, fallen-brothers, enemies, items, weapons, pickups, props, npcs, fx, final)"
+        required: true
+        default: hens
+      only:
+        description: "Optional: only these files (comma separated, part of the name, e.g. mama,queen)"
+        required: false
+        default: ""
+      style_prompt:
+        description: "Style for every sprite"
+        required: false
+        default: "dark, macabre, grimy pixel art for a top-down roguelike, cute shapes but creepy details, strong dark outline, limited palette"
+      strength:
+        description: "How much the original shape is kept (0-1000, higher = closer to the original)"
+        required: false
+        default: "300"
+      limit:
+        description: "Max sprites in this run (each one costs credits)"
+        required: false
+        default: "3"
+      dry_run:
+        description: "Only list what would be generated, spend nothing"
+        type: boolean
+        default: true
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: tools/pixellab
+        run: npm install --no-audit --no-fund
+      - name: Generate
+        working-directory: tools/pixellab
+        env:
+          PIXELLAB_SECRET: ${{ secrets.PIXELLAB_SECRET }}
+          GROUP: ${{ inputs.group }}
+          ONLY: ${{ inputs.only }}
+          STYLE_PROMPT: ${{ inputs.style_prompt }}
+          STRENGTH: ${{ inputs.strength }}
+          LIMIT: ${{ inputs.limit }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          STYLE_IMAGE: art/style.png
+        run: node batch.mjs
+      - name: Save on a review branch
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          if [ -z "$(git status --porcelain art/generated)" ]; then echo "Nothing generated"; exit 0; fi
+          B="sprites/${{ inputs.group }}-${{ github.run_number }}"
+          git config user.name "pixellab-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout -b "$B" && git add art/generated && git commit -m "PixelLab: ${{ inputs.group }} (run ${{ github.run_number }})" && git push origin "$B"
+          echo "Saved on branch $B" >> $GITHUB_STEP_SUMMARY
