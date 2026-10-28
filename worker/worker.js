@@ -60,9 +60,30 @@ async function readCapped(req, max) {
   return new TextDecoder().decode(all);
 }
 export class Stats {
-  constructor(state) { this.state = state; this.hits = new Map(); }
+  constructor(state) { this.state = state; this.hits = new Map(); this.fails = { t: 0, n: 0 }; }
+  // the stats password chosen from the browser: only a salted PBKDF2 hash is stored
+  async auth(req, op) {
+    const pw = await this.state.storage.get('pw');
+    if (op === 'state') return Response.json({ set: !!pw, mat: pw ? pw.hash : '' });
+    const body = await req.json().catch(() => ({}));
+    if (op === 'set') {
+      if (pw) return Response.json({ ok: false, why: 'already set' });
+      const p = String(body.pw || ''); if (p.length < 8 || p.length > 200) return Response.json({ ok: false, why: 'length' });
+      const salt = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+      const rec = { salt, hash: await pbkdf2(p, salt) }; await this.state.storage.put('pw', rec);
+      return Response.json({ ok: true, mat: rec.hash });
+    }
+    if (op === 'verify') {
+      const now = Date.now(); if (now - this.fails.t > 600000) this.fails = { t: now, n: 0 };
+      if (this.fails.n >= 10) return Response.json({ ok: false, why: 'locked' });
+      if (pw && same(await pbkdf2(String(body.pw || ''), pw.salt), pw.hash)) return Response.json({ ok: true, mat: pw.hash });
+      this.fails.n++; return Response.json({ ok: false, why: 'wrong' });
+    }
+    return new Response('bad', { status: 400 });
+  }
   async fetch(req) {
     const url = new URL(req.url);
+    if (url.pathname.startsWith('/auth/')) return this.auth(req, url.pathname.slice(6));
     let S = (await this.state.storage.get('s')) || { since: Date.now(), starts: 0, ends: 0, wins: 0, secs: 0, floors: {}, chars: {}, causes: {}, bosses: {}, modes: {}, langs: {}, acts: {}, vers: {}, days: {}, touch: 0, last: [], errs: {}, rejected: 0 };
     S.errs = S.errs || {}; S.rejected = S.rejected || 0;
     if (req.method === 'POST') {
@@ -141,6 +162,19 @@ function secure(res, url) {
 }
 async function sha(s) { const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(d)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join(''); }
 function same(a, b) { if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false; let x = 0; for (let i = 0; i < a.length; i++) x |= a.charCodeAt(i) ^ b.charCodeAt(i); return x === 0; }
+async function pbkdf2(pw, salt) {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const b = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: new TextEncoder().encode(salt), iterations: 100000 }, k, 256);
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function formPage(title, text, action, fields, err, status = 200) {
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const body = `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Tower of Poop · ${esc(title)}</title>
+<style>body{margin:0;background:#140a0c;color:#efe6d8;font:16px/1.45 system-ui,sans-serif}main{max-width:420px;margin:12vh auto;padding:0 16px}h1{color:#ecd078;font-size:24px;margin:0 0 8px}p{color:#c8b8a8}label{display:block;margin:14px 0 4px;font-size:14px}input{width:100%;box-sizing:border-box;padding:10px;border-radius:6px;border:1px solid #5a3a40;background:#24121a;color:#efe6d8;font-size:16px}button{margin-top:18px;width:100%;padding:11px;border:0;border-radius:6px;background:#a01f2f;color:#fff;font-size:16px;cursor:pointer}.e{color:#ff8a7a}</style>
+<main><h1>${esc(title)}</h1><p>${esc(text)}</p>${err ? `<p class=e>${esc(err)}</p>` : ''}<form method=post action="${action}">${fields.map(f => `<label for=${f[0]}>${esc(f[1])}</label><input id=${f[0]} name=${f[0]} type=password autocomplete=${f[2]} minlength=8 required>`).join('')}<button type=submit>${esc(title)}</button></form></main></html>`;
+  return new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'" } });
+}
+const signedIn = (mat, to) => async () => new Response(null, { status: 303, headers: { Location: to, 'Set-Cookie': 'tops=' + (await sha('stats:' + mat)) + '; Path=/stats; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000', 'Cache-Control': 'no-store' } });
 const plain = (t, s) => new Response(t, { status: s, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 
 export default {
@@ -160,17 +194,38 @@ export default {
       const fwd = new Request(req, { headers: new Headers({ 'x-who': who, 'Content-Type': 'application/json' }) });
       return env.STATS.get(env.STATS.idFromName('all')).fetch(fwd);
     }
-    if (url.pathname === '/stats') {
-      // the page is closed until a password exists:  npx wrangler secret put STATS_KEY
-      if (!env.STATS_KEY) return plain('Stats are closed. Set a password with:  npx wrangler secret put STATS_KEY  then open /stats?k=<password>', 403);
-      const k = url.searchParams.get('k');
-      if (k != null) {   // the password goes into a cookie and leaves the address bar
-        if (!same(k, env.STATS_KEY)) return plain('Wrong password.', 403);
-        return new Response(null, { status: 303, headers: { Location: '/stats' + (url.searchParams.get('format') === 'json' ? '?format=json' : ''), 'Set-Cookie': 'tops=' + (await sha('stats:' + env.STATS_KEY)) + '; Path=/stats; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000', 'Cache-Control': 'no-store' } });
+    if (url.pathname === '/stats' || url.pathname === '/stats/login' || url.pathname === '/stats/setup') {
+      // password: either the STATS_KEY secret from the Cloudflare dashboard, or one chosen the first time /stats is opened
+      const DO = env.STATS.get(env.STATS.idFromName('all'));
+      const st = env.STATS_KEY ? { set: true, mat: 'env:' + env.STATS_KEY } : await (await DO.fetch('https://stats/auth/state')).json();
+      const back = '/stats' + (url.searchParams.get('format') === 'json' ? '?format=json' : '');
+      const check = async pw => {
+        if (env.STATS_KEY) return same(pw, env.STATS_KEY) ? { ok: true } : { ok: false, why: 'wrong' };
+        return (await DO.fetch('https://stats/auth/verify', { method: 'POST', body: JSON.stringify({ pw }) })).json();
+      };
+      const why = r => r.why === 'locked' ? 'Too many wrong passwords. Try again in 10 minutes.' : 'Wrong password.';
+      if (!st.set) {
+        if (url.pathname === '/stats/setup' && req.method === 'POST') {
+          const f = await req.formData(), a = String(f.get('pw') || ''), b = String(f.get('pw2') || '');
+          if (a.length < 8) return formPage('Create password', 'Choose the password for your stats page.', '/stats/setup', [['pw', 'Password (at least 8 characters)', 'new-password'], ['pw2', 'Repeat password', 'new-password']], 'At least 8 characters.', 400);
+          if (a !== b) return formPage('Create password', 'Choose the password for your stats page.', '/stats/setup', [['pw', 'Password (at least 8 characters)', 'new-password'], ['pw2', 'Repeat password', 'new-password']], 'The two passwords are different.', 400);
+          const r = await (await DO.fetch('https://stats/auth/set', { method: 'POST', body: JSON.stringify({ pw: a }) })).json();
+          if (!r.ok) return plain('A password already exists: open /stats to sign in.', 409);
+          return signedIn('h:' + r.mat, '/stats')();
+        }
+        return formPage('Create password', 'First visit: choose the password for your stats page. Only you will need it.', '/stats/setup', [['pw', 'Password (at least 8 characters)', 'new-password'], ['pw2', 'Repeat password', 'new-password']]);
       }
+      const mat = env.STATS_KEY ? st.mat : 'h:' + st.mat;
+      if (url.pathname === '/stats/login' && req.method === 'POST') {
+        const f = await req.formData(), r = await check(String(f.get('pw') || ''));
+        if (!r.ok) return formPage('Sign in', 'Tower of Poop stats.', '/stats/login', [['pw', 'Password', 'current-password']], why(r), 403);
+        return signedIn(mat, '/stats')();
+      }
+      const k = url.searchParams.get('k');
+      if (k != null) { const r = await check(k); if (!r.ok) return plain(why(r), 403); return signedIn(mat, back)(); }
       const ck = (req.headers.get('Cookie') || '').match(/(?:^|;\s*)tops=([0-9a-f]+)/);
-      if (!ck || !same(ck[1], await sha('stats:' + env.STATS_KEY))) return plain('Open /stats?k=<password> to sign in.', 403);
-      const r = await env.STATS.get(env.STATS.idFromName('all')).fetch(new Request(url.toString(), { method: 'GET' }));
+      if (!ck || !same(ck[1], await sha('stats:' + mat))) return formPage('Sign in', 'Tower of Poop stats.', '/stats/login', [['pw', 'Password', 'current-password']]);
+      const r = await DO.fetch(new Request(url.origin + '/stats' + url.search, { method: 'GET' }));
       return secure(r, url);
     }
     return secure(await env.ASSETS.fetch(req), url);

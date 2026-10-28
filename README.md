@@ -33,7 +33,7 @@ The Cloudflare configuration (`wrangler.toml`) is at the repository root.
 
 - **Automatic (recommended):** connect this repository to a Worker in the Cloudflare dashboard (Workers & Pages → Create → Import a repository). Leave *Root directory* empty and *Build command* empty; *Deploy command* is `npx wrangler deploy`. Every push to `main` goes live.
 - **By hand:** from the repository root run `npx wrangler deploy`.
-First time: `npx wrangler login`. Stats stay closed until you set a password with `npx wrangler secret put STATS_KEY` (then `/stats?k=<password>`). Details in `worker/README.txt`.
+First time: `npx wrangler login`. Stats live at `/stats`: the first time you open it you choose a password (only its salted hash is stored). A `STATS_KEY` secret set in the Cloudflare dashboard, if present, replaces it. Details in `worker/README.txt`.
 
 ## Tests
 ```bash

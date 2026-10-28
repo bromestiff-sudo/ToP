@@ -38,11 +38,13 @@ ANONYMOUS STATS (since version 159, hardened in 161)
    floor reached, what killed you, bosses beaten, length, act, language) and game errors
    (message and code line only). No names, no ids, no IPs.
 
-   The page is CLOSED until you set a password (once):
-       npx wrangler secret put STATS_KEY
-   Then open:   https://tower-of-poop.<your-account>.workers.dev/stats?k=<your-password>
-   The password moves into a cookie and leaves the address bar; for 30 days just open
-   /stats.   Raw data: /stats?format=json
+   Open  https://tower-of-poop.<your-subdomain>.workers.dev/stats
+   The first time, the page asks you to CREATE a password (at least 8 characters).
+   After that it asks you to sign in; the browser stays signed in for 30 days.
+   Only a salted hash of the password is stored. 10 wrong passwords lock sign-in for 10 minutes.
+   Forgot it? Add a secret named STATS_KEY in the dashboard (Settings -> Variables and Secrets,
+   type Secret): it replaces the browser-made password.
+   Raw data: /stats?format=json
 
    Protections: at most 40 events per minute per connection, only known values accepted,
    tables capped in rows, payloads over 4 KB dropped, only from the game's own page.

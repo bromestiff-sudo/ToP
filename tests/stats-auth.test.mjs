@@ -1,0 +1,23 @@
+// stats page sign-in: first-visit password, login form, ?k=, lockout, dashboard secret override
+import W, { Stats } from '../worker/worker.js';
+const store = new Map(); const SO = new Stats({ storage: { get: async k => store.get(k), put: async (k, v) => store.set(k, v) } });
+const stub = { fetch: (r, i) => SO.fetch(r instanceof Request ? r : new Request(r, i)) };
+const env = { STATS: { idFromName: () => 1, get: () => stub }, ASSETS: { fetch: async () => new Response('game', { headers: { 'Content-Type': 'text/html' } }) } };
+const U = 'https://top.test', go = (p, o = {}, e = env) => W.fetch(new Request(U + p, o), e);
+const form = o => ({ method: 'POST', body: new URLSearchParams(o) });
+const show = async r => r.status + ' ' + (r.headers.get('Location') || '') + ' ' + ((await r.text()).match(/<h1>([^<]*)/) || [, ''])[1];
+console.log('first visit  ', await show(await go('/stats')));
+console.log('short pw     ', await show(await go('/stats/setup', form({ pw: 'abc', pw2: 'abc' }))));
+console.log('mismatch     ', await show(await go('/stats/setup', form({ pw: 'abcdefgh', pw2: 'abcdefgX' }))));
+const s = await go('/stats/setup', form({ pw: 'poopsecret', pw2: 'poopsecret' })); const ck = (s.headers.get('Set-Cookie') || '').split(';')[0];
+console.log('setup ok     ', s.status, s.headers.get('Location'), !!ck, 'stored hash only:', !JSON.stringify([...store]).includes('poopsecret'));
+console.log('setup again  ', (await go('/stats/setup', form({ pw: 'hijack123', pw2: 'hijack123' }))).status);
+const page = await go('/stats', { headers: { Cookie: ck } }); console.log('with cookie  ', page.status, (await page.text()).includes('Player errors'));
+console.log('no cookie    ', await show(await go('/stats')));
+console.log('login wrong  ', await show(await go('/stats/login', form({ pw: 'nope1234' }))));
+const lg = await go('/stats/login', form({ pw: 'poopsecret' })); console.log('login ok     ', lg.status, lg.headers.get('Location'));
+console.log('?k= ok       ', (await go('/stats?k=poopsecret')).status);
+for (let i = 0; i < 12; i++) await go('/stats/login', form({ pw: 'bad' + i + 'xxxxx' }));
+console.log('locked       ', (await (await go('/stats/login', form({ pw: 'poopsecret' }))).text()).includes('Too many'));
+const e2 = { ...env, STATS_KEY: 'dashkey1' };
+console.log('dashboard key', (await go('/stats?k=dashkey1', {}, e2)).status, (await go('/stats?k=poopsecret', {}, e2)).status);

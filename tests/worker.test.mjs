@@ -1,6 +1,6 @@
 import W,{Stats,Room} from '../worker/worker.js';
 const store=new Map();const st={storage:{get:async k=>store.get(k),put:async(k,v)=>store.set(k,v)}};const SO=new Stats(st);
-const env={STATS_KEY:'pw123',STATS:{idFromName:()=>1,get:()=>SO},ASSETS:{fetch:async()=>new Response('<html>game</html>',{headers:{'Content-Type':'text/html'}})}};
+const env={STATS_KEY:'pw123',STATS:{idFromName:()=>1,get:()=>({fetch:(r,i)=>SO.fetch(r instanceof Request?r:new Request(r,i))})},ASSETS:{fetch:async()=>new Response('<html>game</html>',{headers:{'Content-Type':'text/html'}})}};
 const U='https://top.test';const post=(o,h={})=>W.fetch(new Request(U+'/api/stats',{method:'POST',headers:{'Origin':U,'CF-Connecting-IP':'1.2.3.4',...h},body:typeof o==='string'?o:JSON.stringify(o)}),env);
 const r=async p=>{const x=await p;return x.status+':'+(await x.text()).slice(0,30)};
 console.log('start',await r(post({t:'start',mode:'normal',char:'two',lang:'it',act:1,v:161,touch:true})));
