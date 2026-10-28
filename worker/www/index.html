@@ -173,7 +173,7 @@ try{const nz=e=>{e.preventDefault();};['gesturestart','gesturechange','gestureen
   if(window.visualViewport){visualViewport.addEventListener('resize',unzoom);visualViewport.addEventListener('scroll',()=>{if(visualViewport.scale>1.01)unzoom();});}
   addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0);},{passive:true});}catch(e){}
 // ← Put the public URL of the game here so tweets link back to it
-const GAME_URL='https://tower-of-poop.pages.dev/';
+const GAME_URL='https://tower-of-poop.bromestiff.workers.dev/';
 
 const FONTK=1.15;let FADE=0;let TOPI=0,HX=0,H=320,W=320,Z=1.12,VW=286,VH=286,KUI=1,KW=1;const TS=16,CW=20,CH=16,TAU=Math.PI*2,INF=65535;
 const cv=document.getElementById('game');
@@ -3454,7 +3454,7 @@ Object.assign(BRULE,{
    phase(b,ph){b.mt=1;},draw(b){if(b.mw){ctx.globalAlpha=.25+.25*Math.sin(G.time*30);ell(ctx,b.x,b.y-b.r*.6,b.r*1.3,b.r*1.4,'#ffffff');ctx.globalAlpha=1;}
    if(G.mirrorCtl>G.time){const R=b.R;ctx.globalAlpha=.18+.08*Math.sin(G.time*8);ctx.strokeStyle='#c8e8ff';ctx.lineWidth=3;ctx.strokeRect(R.x0+2,R.y0+2,R.x1-R.x0-4,R.y1-R.y0-4);ctx.globalAlpha=1;}}}});
 // ---------- anonymous play stats: no names, no ids, nothing that leads back to a person ----------
-const STATV=161;
+const STATV=162;
 const ERRSENT=new Set();
 function statErr(err){if(ERRSENT.size>=8||!statOnWorker())return;const msg=String(err&&err.message||err||'?').slice(0,90),st=String(err&&err.stack||'').split('\n').find(l=>/:\d+:\d+/.test(l))||'',at=(st.match(/:(\d+:\d+)\)?\s*$/)||[])[1]||'';const key=msg+at;if(ERRSENT.has(key))return;ERRSENT.add(key);statPost({t:'err',msg,at});}
 addEventListener('error',e=>{try{statErr(e.error||e.message);}catch(_){}});
