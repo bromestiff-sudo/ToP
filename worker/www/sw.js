@@ -1,4 +1,4 @@
-const V='top-v164';const FILES=['./','manifest.webmanifest','fonts/silkscreen-latin-400-normal.woff2','fonts/silkscreen-latin-700-normal.woff2','icons/icon-192.png','icons/icon-512.png'];
+const V='top-v165';const FILES=['./','manifest.webmanifest','fonts/silkscreen-latin-400-normal.woff2','fonts/silkscreen-latin-700-normal.woff2','icons/icon-192.png','icons/icon-512.png'];
 // a response that went through a redirect must never answer a page load (Android refuses to open the app)
 const clean=r=>r&&r.redirected?r.blob().then(b=>new Response(b,{status:200,headers:r.headers})):r;
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(FILES.map(f=>fetch(f,{cache:'reload'}).then(clean).then(r=>r&&r.ok?c.put(f,r):null).catch(()=>null)))).then(()=>self.skipWaiting()));});

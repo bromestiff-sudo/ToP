@@ -3464,7 +3464,7 @@ Object.assign(BRULE,{
    phase(b,ph){b.mt=1;},draw(b){if(b.mw){ctx.globalAlpha=.25+.25*Math.sin(G.time*30);ell(ctx,b.x,b.y-b.r*.6,b.r*1.3,b.r*1.4,'#ffffff');ctx.globalAlpha=1;}
    if(G.mirrorCtl>G.time){const R=b.R;ctx.globalAlpha=.18+.08*Math.sin(G.time*8);ctx.strokeStyle='#c8e8ff';ctx.lineWidth=3;ctx.strokeRect(R.x0+2,R.y0+2,R.x1-R.x0-4,R.y1-R.y0-4);ctx.globalAlpha=1;}}}});
 // ---------- anonymous play stats: no names, no ids, nothing that leads back to a person ----------
-const STATV=164;
+const STATV=165;
 const ERRSENT=new Set();
 function statErr(err){if(ERRSENT.size>=8||!statOnWorker())return;const msg=String(err&&err.message||err||'?').slice(0,90),st=String(err&&err.stack||'').split('\n').find(l=>/:\d+:\d+/.test(l))||'',at=(st.match(/:(\d+:\d+)\)?\s*$/)||[])[1]||'';const key=msg+at;if(ERRSENT.has(key))return;ERRSENT.add(key);statPost({t:'err',msg,at});}
 addEventListener('error',e=>{try{statErr(e.error||e.message);}catch(_){}});
@@ -3647,6 +3647,45 @@ function frenzyOverButtons(cx, y) {
   one(cx + 4, 92, TTX(L3('BASTION', 'BALUARDO', 'BALUARTE')), '#3a2a12', () => { FADE = .8; enterHub(); });
 }
 function overTap(e) { if (!(G && G.frenzy) || performance.now() - (S.overT0 || 0) < 1500) return false; for (const b of S.oBtns || []) if (hitDev(e, b.r)) { b.act(); return true; } return false; }
+// ---------- the title sky follows the story: high sun in act I, halfway in act II, sunset and a violet aura in act III ----------
+function titleSun(g, act, w, h, hz, tx) {
+  if (act >= 3) return false; // act III keeps the original sunset
+  const sr = Math.round(h * (act === 1 ? .085 : .11)), sx = tx + Math.round(h * (act === 1 ? .1 : .13)), sy = act === 1 ? Math.round(h * .2) : Math.round(hz - h * .26);
+  // halo
+  for (let r = sr * 3; r > sr; r -= 2) { g.globalAlpha = .05 * (1 - (r - sr) / (sr * 2)); g.fillStyle = act === 1 ? '#fff0b0' : '#ffc070'; g.beginPath(); g.arc(sx, sy, r, 0, Math.PI * 2); g.fill(); }
+  g.globalAlpha = 1;
+  for (let y = -sr; y <= sr; y++) for (let x = -sr; x <= sr; x++) if (x * x + y * y <= sr * sr) {
+    g.fillStyle = act === 1 ? (y < -sr * .3 ? '#fffbe0' : y < sr * .3 ? '#fff0b0' : '#ffd890') : (y < -sr * .3 ? '#ffe0a0' : y < sr * .2 ? '#ffc070' : '#ff9a50'); g.fillRect(sx + x, sy + y, 1, 1);
+  }
+  return true;
+}
+function titleSky(act) {
+  if (act === 1) return ['#1c2048', '#262c5a', '#38386a', '#544470', '#7a5474', '#a26872', '#c8806e', '#e2a070', '#f0c080', '#f6d898'];
+  if (act === 2) return ['#18102a', '#24163a', '#341c44', '#4c2448', '#6a2e48', '#8e3a44', '#b44e3a', '#d86c36', '#ea8e40', '#f4ae58'];
+  return null;
+}
+// sunlight on the side of the tower that faces the sun
+function titleTowerLight(g, act, h, B) {
+  if (act >= 3) return; const base = B.hz + 2, th = (base - B.top) / 7, n = act === 1 ? 4 : 2;
+  for (let i = 7 - n; i < 7; i++) {
+    const y0 = Math.round(base - (i + 1) * th), y1 = Math.round(base - i * th), hw = Math.round((26 - i * 2.4) * h / 288), k = (i - (7 - n) + 1) / n;
+    g.globalAlpha = (act === 1 ? .85 : .55) * k; g.fillStyle = act === 1 ? '#ffd890' : '#ffb060'; g.fillRect(B.tx + hw - 3, y0, 3, y1 - y0); g.fillRect(B.tx - hw, y0, hw * 2, 1);
+  }
+  g.globalAlpha = act === 1 ? .9 : .6; g.fillStyle = act === 1 ? '#ffe8b0' : '#ffc070'; g.fillRect(B.tx - 5, B.top - 10, 10, 1); g.fillRect(B.tx + 3, B.top - 10, 2, 10); g.globalAlpha = 1;
+}
+// act III: the tower breathes a violet aura
+function titleAura(B, t, h) {
+  const tx = B.tx, top = B.top - 14, base = B.hz + 2, mid = (top + base) / 2, p = .65 + .35 * Math.sin(t * 1.6);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const gr = ctx.createRadialGradient(tx, mid, h * .04, tx, mid, h * .46); gr.addColorStop(0, 'rgba(170,70,230,' + (.3 * p) + ')'); gr.addColorStop(.6, 'rgba(130,40,200,' + (.12 * p) + ')'); gr.addColorStop(1, 'rgba(120,40,180,0)');
+  ctx.fillStyle = gr; ctx.fillRect(tx - h * .5, top - h * .2, h, base - top + h * .3);
+  titleTower(B, h, (i, y0, y1, hw) => { ctx.globalAlpha = .45 * p; ctx.fillStyle = '#c070ff'; ctx.fillRect(tx - hw - 2, y0, 2, y1 - y0); ctx.fillRect(tx + hw, y0, 2, y1 - y0); });
+  if (!reduced) for (let k = 0; k < 18; k++) {
+    const per = 4 + k % 5, u = ((t + k * 1.37) % per) / per, x = tx + Math.sin(k * 2.1 + t * .7) * (h * .05 + (k % 4) * 3), y = base - u * (base - top + h * .12);
+    ctx.globalAlpha = (1 - u) * .85; ctx.fillStyle = k % 3 ? '#d8a0ff' : '#ffffff'; ctx.fillRect(Math.round(x), Math.round(y), 1 + (k % 5 === 0), 1 + (k % 5 === 0));
+  }
+  ctx.restore();
+}
 function playScene(lines,title,sub,after){S.mode='scene';S.scene={lines,i:0,ch:0,title,sub,after,right:(lines.find(l=>l[0]!=='two'&&l[0]!=='nar'&&l[0]!=='book')||['sponge'])[0]};setState();}
 function showMap(from,to,after){S.mode='map';S.mapA={from,to,t:0,after};setState();}
 function advanceStory(){
@@ -5896,7 +5935,7 @@ function titleRootNet(B,w,h){if(TRN&&TRN.w===w&&TRN.h===h)return TRN.n;let sd=97
   TRN={w,h,n:out};return out;}
 function titleStage(){try{if(SV.qEnd)return 5;const n=qCount(),tg=fallenTagCount();if(n>=21&&tg>=12)return 4;if(n>=14)return 3;if(n>=7)return 2;if(n>=1)return 1;}catch(e){}return 0;}
 function titleTower(B,h,fn){const base=B.hz+2,th=(base-B.top)/7;for(let i=0;i<7;i++){const y0=Math.round(base-(i+1)*th),y1=Math.round(base-i*th),hw=Math.round((26-i*2.4)*h/288);fn(i,y0,y1,hw);}}
-function titleBack(B,t,QS,w,h){if(!QS)return;const tx=B.tx;
+function titleBack(B,t,QS,w,h){if(B.act>=3&&QS!==5)titleAura(B,t,h);if(!QS)return;const tx=B.tx;
   if(QS===5){// dawn: a pale sky, a dead grey tower without lights
     const g=ctx.createLinearGradient(0,0,0,B.hz);g.addColorStop(0,'rgba(110,150,200,.62)');g.addColorStop(.7,'rgba(240,190,170,.5)');g.addColorStop(1,'rgba(255,220,180,.45)');ctx.fillStyle=g;ctx.fillRect(0,0,w,B.hz);
     titleTower(B,h,(i,y0,y1,hw)=>{rect(ctx,tx-hw,y0,hw*2,y1-y0,'#4a4650');rect(ctx,tx+hw-2,y0,2,y1-y0,'#5c5864');rect(ctx,tx-hw-2,y1-2,hw*2+4,2,'#36323c');});
@@ -5928,14 +5967,14 @@ function titleFront(B,t,QS,sc,hx,hy,w,h){if(!QS)return;
     if(!SPR.qhenB)SPR.qhenB=fromMap(QHENB.f[0],QHENB.p);const im=SPR.qhenB,k=Math.max(1,sc-1),cx=hx-Math.round(16*sc),gy=B.ctop+Math.round(Math.sin(cx*.3)*1.5+Math.sin(cx*.07)*3),bob=Math.sin(t*1.3)>.92?-k:0;ctx.save();ctx.translate(cx-Math.round(im.width*k/2),gy-im.height*k+k+bob);ctx.scale(k,k);ctx.drawImage(im,0,0);ctx.restore();}
   // her words, trembling in violet, now and then
   const L=TPHR[QS];if(L&&L.length){const cyc=11,c=t%cyc,i=Math.floor(t/cyc)%L.length;if(c>1.5&&c<7){const a=Math.min(1,(c-1.5)/.8,(7-c)/.8);const str=LG==='it'?L[i][1]:L[i][0];
-      ctx.globalAlpha=a;const lines=wrapText(str,Math.round(w*.46),10);lines.forEach((l,j)=>{ctx.font=(10*FONTK)+'px Silkscreen, ui-monospace, monospace';const lw=ctx.measureText(l).width;livingText(l,Math.round(w*.3-lw/2),Math.round(h*.06)+76+j*15,10,'#c070f0',t,j*30+i*7,1.3,999);});ctx.globalAlpha=1;}}
-  if(QS===4&&!reduced&&(t%5)<1.1){ctx.globalAlpha=.5+.5*Math.sin(t*20);NOTR=true;waveText(LG==='it'?'IL DIARIO DELLA REGINA':T_('THE QUEEN\'S DIARY'),Math.round(w*.3),Math.round(h*.06)+60,9,'#c87aff','#1a0420',t,1.5);NOTR=false;ctx.globalAlpha=1;}}
-function titleBackdrop(w,h){const [c,g]=mk(w,h),hz=Math.round(h*.66);
-  const sky=['#140a1e','#1e0f2a','#2c1434','#3e1a3a','#58203c','#7a2a3a','#a33a34','#c8552e','#e47a30','#f2a04a'];
+      ctx.globalAlpha=a;const lines=wrapText(str,Math.round(w*.46),10);lines.forEach((l,j)=>{ctx.font=(10*FONTK)+'px Silkscreen, ui-monospace, monospace';const lw=ctx.measureText(l).width;livingText(l,Math.round(w*.7-lw/2),Math.round(h*.7)-lines.length*15+j*15,10,'#c070f0',t,j*30+i*7,1.3,999);});ctx.globalAlpha=1;}}
+  if(QS===4&&!reduced&&(t%5)<1.1){ctx.globalAlpha=.5+.5*Math.sin(t*20);NOTR=true;waveText(LG==='it'?'IL DIARIO DELLA REGINA':T_('THE QUEEN\'S DIARY'),Math.round(w*.7),Math.round(h*.75),9,'#c87aff','#1a0420',t,1.5);NOTR=false;ctx.globalAlpha=1;}}
+function titleBackdrop(w,h,act){act=act||3;const [c,g]=mk(w,h),hz=Math.round(h*.66);
+  const sky=titleSky(act)||['#140a1e','#1e0f2a','#2c1434','#3e1a3a','#58203c','#7a2a3a','#a33a34','#c8552e','#e47a30','#f2a04a'];
   for(let y=0;y<hz;y++){const f=y/hz*(sky.length-1),i=Math.floor(f),fr=f-i;for(let x=0;x<w;x++){const d=((x*7+y*13)%4)/4;g.fillStyle=sky[Math.min(sky.length-1,i+(fr>d+.12?1:0))];g.fillRect(x,y,1,1);}}
   for(let i=0;i<40;i++){const x=(i*97)%w,y=(i*53)%Math.round(hz*.45);g.fillStyle=i%3?'#e8d8ff':'#ffffff';g.globalAlpha=.35+(i%4)*.15;g.fillRect(x,y,1,1);}g.globalAlpha=1;
   const tx=Math.round(w*.7),sr=Math.round(h*.17),sy=hz-Math.round(h*.06);
-  for(let y=-sr;y<=sr;y++)for(let x=-sr;x<=sr;x++)if(x*x+y*y<=sr*sr&&sy+y<hz){const yy=sy+y;if(y>sr*.15&&(Math.floor((yy)/3)%3===0))continue;g.fillStyle=y<-sr*.3?'#ffd890':y<sr*.2?'#ffb860':'#ff8a48';g.fillRect(tx+x,yy,1,1);}
+  if(!titleSun(g,act,w,h,hz,tx))for(let y=-sr;y<=sr;y++)for(let x=-sr;x<=sr;x++)if(x*x+y*y<=sr*sr&&sy+y<hz){const yy=sy+y;if(y>sr*.15&&(Math.floor((yy)/3)%3===0))continue;g.fillStyle=y<-sr*.3?'#ffd890':y<sr*.2?'#ffb860':'#ff8a48';g.fillRect(tx+x,yy,1,1);}
   const ridge=(amp,base,col,seed,sc)=>{g.fillStyle=col;for(let x=0;x<w;x++){const v=Math.sin(x*.021*sc+seed)*.5+Math.sin(x*.057*sc+seed*2)*.3+Math.sin(x*.13*sc+seed*3)*.2;const top=Math.round(base-amp*(v*.5+.5));g.fillRect(x,top,1,hz-top+1);}};
   ridge(h*.12,hz,'#4a1e3c',1.3,1);ridge(h*.07,hz,'#30142e',4.1,1.6);
   // the tower
@@ -5945,6 +5984,7 @@ function titleBackdrop(w,h){const [c,g]=mk(w,h),hz=Math.round(h*.66);
     g.fillStyle='#120814';g.fillRect(tx-hw-2,y1-2,hw*2+4,2);
     for(let k=-1;k<=1;k++)if((i+k+3)%2===0){g.fillStyle='#ffcf5a';g.fillRect(tx+k*Math.round(hw*.55)-1,y0+Math.round((y1-y0)*.35),2,3);}}
   g.fillStyle='#1a0e1c';g.fillRect(tx-5,top-10,10,10);for(const dx of [-5,-1,3])g.fillRect(tx+dx,top-14,2,4);
+  titleTowerLight(g,act,h,{tx,top,hz});
   // haze over the horizon
   for(let y=hz-14;y<hz+4;y++){g.globalAlpha=(1-Math.abs(y-hz+5)/10)*.25;g.fillStyle='#ffb070';g.fillRect(0,y,w,1);}g.globalAlpha=1;
   // plain below the horizon
@@ -5954,7 +5994,7 @@ function titleBackdrop(w,h){const [c,g]=mk(w,h),hz=Math.round(h*.66);
   for(let x=0;x<=cx1+20;x++){const edge=x<cx1?ctop+Math.round(Math.sin(x*.3)*1.5+Math.sin(x*.07)*3):ctop+Math.round((x-cx1)*(x-cx1)*.35);g.fillRect(x,edge,1,h-edge);}
   g.fillStyle='#24141c';for(let x=0;x<cx1;x+=1){const e=ctop+Math.round(Math.sin(x*.3)*1.5+Math.sin(x*.07)*3);g.fillRect(x,e,1,1);if(x%5===0){g.fillStyle='#3a2a20';g.fillRect(x,e-1-(x%3),1,1+(x%3));g.fillStyle='#24141c';}}
   return {c,hz,tx,top,ctop,cx1};}
-function drawCine(){const w=Math.ceil(W),h=Math.ceil(H),t=S.cineT;if(!TBG||TBG.w!==w||TBG.h!==h)TBG=Object.assign({w,h},titleBackdrop(w,h));const B=TBG;
+function drawCine(){const w=Math.ceil(W),h=Math.ceil(H),t=S.cineT;{const A=storyAct();if(!TBG||TBG.w!==w||TBG.h!==h||TBG.act!==A)TBG=Object.assign({w,h,act:A},titleBackdrop(w,h,A));}const B=TBG;
   const e=x=>x<0?0:x>1?1:x*x*(3-2*x),p=e(t/3.2),z=Math.pow(10,p),fx=B.tx,fy=B.hz-h*.07;
   const sw=w/z,sh=h/z,sx=clamp(fx-sw/2+(w/2-fx)*(1-p)*(1/z),0,w-sw),sy=clamp(fy-sh*.62+(h/2-fy)*(1-p)*(1/z),0,h-sh);
   ctx.drawImage(B.c,sx,sy,sw,sh,0,0,W,H);
@@ -5987,7 +6027,7 @@ function drawSplash(){const t=S.splT,a=t<.4?t/.4:t<1.5?1:Math.max(0,(2-t)/.5);re
   ctx.font='bold 30px "Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Sans JP",serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle='#5a3a08';ctx.fillText('心',cx+1,cy-6);ctx.fillStyle='#ffd23f';ctx.fillText('心',cx,cy-7);
   txt('KOKORO STUDIO',cx,cy+2,'#f6f4ee','center',16,'#3a0a10');txt('presents',cx,cy+26,'#c8b090','center',8,null);ctx.globalAlpha=1;}
 function drawTitle(){const w=Math.ceil(W),h=Math.ceil(H),t=S.t;
-  if(!TBG||TBG.w!==w||TBG.h!==h)TBG=Object.assign({w,h},titleBackdrop(w,h));const B=TBG;
+  {const A=storyAct();if(!TBG||TBG.w!==w||TBG.h!==h||TBG.act!==A)TBG=Object.assign({w,h,act:A},titleBackdrop(w,h,A));}const B=TBG;
   ctx.drawImage(B.c,0,0);const QS=titleStage();titleBack(B,t,QS,w,h);
   // the flock circling the top of the tower, pooping on the land below
   const n=QS===5?0:9,fx=[];for(let i=0;i<n;i++){const a=t*.55+i*TAU/n,r=(30+(i%3)*10)*h/288;const x=B.tx+Math.cos(a)*r*1.5,y=B.top+6+Math.sin(a*1.3)*r*.35+(i%2)*6;fx.push([x,y]);
