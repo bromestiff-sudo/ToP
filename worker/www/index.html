@@ -3614,24 +3614,29 @@ function titleMenu(t, QS) {
   big(cx - 90, 86, TTX('▶ ' + L3('STORY', 'STORIA', 'HISTORIA')), '#3a2a12', '#8a6a2a', () => newGame());
   big(cx + 4, 86, TTX('▶ ' + L3('FRENZY', 'FRENESIA', 'FRENESÍ')), '#7a1020', '#c8343e', () => startFrenzy());
   y += 23;
-  // the modes bought at the Bastion: visible from the start, locked until paid for
-  ctx.font = '7px Silkscreen, ui-monospace, monospace';
-  const ws = MODES.map(md => Math.ceil(ctx.measureText(tr(md.name)).width) + 22), gap = 4, tot = ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1);
-  let xx = Math.round(cx - tot / 2);
+  // the modes bought at the Bastion: visible from the start, locked until paid for.
+  // A column at the bottom left, on the dark cliff: every name has room to be read in full.
+  const fs = 8, ps = 7, rh = 15, pad = 6;
+  ctx.font = (fs * FONTK) + 'px Silkscreen, ui-monospace, monospace';
+  const nameW = Math.max(...MODES.map(md => ctx.measureText(tr(md.name)).width));
+  ctx.font = (ps * FONTK) + 'px Silkscreen, ui-monospace, monospace';
+  const priceW = Math.max(...MODES.map(md => ctx.measureText(md.price + L3(' CORN', ' MAIS', ' MAÍZ')).width), ctx.measureText(L3('PLAY', 'GIOCA', 'JUGAR') + ' ▶').width);
+  const colW = Math.ceil(14 + nameW + 10 + priceW + pad), bx = 8, by0 = Math.round(H) - 8 - MODES.length * (rh + 3);
+  txt(L3('MORE MODES', 'ALTRE MODALITÀ', 'MÁS MODOS'), bx + 2, by0 - 11, '#c8b090', 'left', 7, '#000');
   MODES.forEach((md, i) => {
-    const own = (SV.modes || []).includes(md.id), cw = ws[i], x = xx; xx += cw + gap;
-    rect(ctx, x, y, cw, 15, own ? 'rgba(90,40,20,.9)' : 'rgba(20,12,16,.85)'); rect(ctx, x, y, cw, 1, own ? '#ffb27a' : '#4a3a40');
-    if (!own) lockIcon(x + 4, y + 4, '#8a7a7a');
-    txt(tr(md.name), x + cw / 2 + (own ? 0 : 5), y + 4, own ? '#ffd8b0' : '#8a7a7a', 'center', 7, '#000');
+    const own = (SV.modes || []).includes(md.id), yy = by0 + i * (rh + 3);
+    rect(ctx, bx, yy, colW, rh, own ? 'rgba(90,40,20,.92)' : 'rgba(14,8,12,.88)'); rect(ctx, bx, yy, 2, rh, own ? '#ffb27a' : '#5a4a50');
+    if (!own) lockIcon(bx + 6, yy + 4, '#9a8a8a');
+    txt(tr(md.name), bx + 16, yy + 4, own ? '#ffe8c8' : '#c8b8b8', 'left', fs, '#000');
+    txt(own ? TTX(L3('PLAY', 'GIOCA', 'JUGAR') + ' ▶') : TTX(md.price + L3(' CORN', ' MAIS', ' MAÍZ')), bx + colW - pad, yy + 5, own ? '#ffb27a' : '#ffd23f', 'right', ps, '#000');
     S.tBtns.push({
-      r: devRect(x, y, cw, 15), act: () => {
+      r: devRect(bx, yy, colW, rh), act: () => {
         if (own) { au(); startMode(md.id); return; }
         SFX.tink(); S.tMsg = { s: TTX(L3('Unlock it at the Bastion: ', 'Si sblocca al Baluardo: ', 'Se desbloquea en el Baluarte: ') + md.price + L3(' corn (you have ', ' mais (ne hai ', ' maíz (tienes ') + (SV.credits || 0) + ')'), t: S.t };
       }
     });
   });
-  y += 19;
-  if (S.tMsg && S.t - S.tMsg.t < 3.2) txt(S.tMsg.s, cx, y, '#ffe14a', 'center', 7, '#000');
+  if (S.tMsg && S.t - S.tMsg.t < 3.2) txt(S.tMsg.s, cx, y + 2, '#ffe14a', 'center', 7, '#000');
 }
 function titleTap(e) { for (const b of S.tBtns || []) if (hitDev(e, b.r)) { b.act(); return true; } return false; }
 // after a frenzy: play again or go to the Bastion
