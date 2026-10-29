@@ -45,7 +45,7 @@ export class Room {
 
 // ---------- anonymous play stats: one Durable Object keeps the totals. No ids, no IPs, nothing personal is stored ----------
 const clip = (v, n) => String(v == null ? '' : v).slice(0, n);
-const MODES = new Set(['normal', 'daily', 'rush', 'surv', 'qm', 'coop']);
+const MODES = new Set(['normal', 'daily', 'rush', 'surv', 'qm', 'coop', 'frenzy']);
 const CHARS = new Set(['two', 'bristle', 'duck', 'wipe', 'chick']);
 const LANGS = new Set(['en', 'it', 'es']);
 const NAME_RE = /^[A-Z0-9 .,'!?&()\-]{1,40}$/;    // boss names are written in capitals

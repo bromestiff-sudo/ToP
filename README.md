@@ -54,3 +54,9 @@ Screenshots go to `tests/out/`.
 3. Commit and push: Cloudflare deploys it.
 
 The full story and world rules live in the Lore Bible (separate document).
+
+## Game modes
+- **Story**: the tower, the Bastion, the acts (Prologue, I, II, III).
+- **Frenzy** (`src/frenzy.js`, button on the title screen or key F): three minutes in the arena, a random gun,
+  a shuffled deck of enemy squads (no squad repeats until the deck runs out) and a random twist every 30 seconds.
+- Boss Rush, Endless Coop and Hardcore, bought with corn at the Bastion.
