@@ -4,7 +4,7 @@ const p=await b.newPage({viewport:{width:960,height:540},deviceScaleFactor:1.5})
 await p.goto('file://'+path.resolve(__dirname,'../build/tw.html'));await p.waitForTimeout(800);await p.evaluate(()=>{localStorage.clear();localStorage.setItem('top_lang','it')});await p.reload();await p.waitForTimeout(1500);
 await p.mouse.click(480,270);await p.waitForTimeout(3500);await p.screenshot({path:__dirname+'/out/frenzy_title.png'});
 // click the button where the game says it is
-const xy=await p.evaluate(()=>{const b=__T.S.frBtn,r=document.querySelector('canvas').getBoundingClientRect();return b?[r.left+(b[0]+b[2]/2)/__T.W*r.width,r.top+(b[1]+b[3]/2)/__T.H*r.height]:null;}).catch(()=>null);
+const xy=await p.evaluate(()=>{const b=__T.S.tBtns&&__T.S.tBtns[1]&&__T.S.tBtns[1].r,cv=document.querySelector('canvas'),r=cv.getBoundingClientRect();return b?[r.left+(b[0]+b[2]/2)/cv.width*r.width,r.top+(b[1]+b[3]/2)/cv.height*r.height]:null;}).catch(()=>null);
 console.log('button',!!xy);
 if(xy)await p.mouse.click(xy[0],xy[1]);else await p.keyboard.press('KeyF');
 await p.waitForTimeout(1500);console.log('mode',await p.evaluate(()=>[__T.S.mode,!!__T.G.frenzy,__T.G.frenzy&&__T.G.frenzy.gun]));

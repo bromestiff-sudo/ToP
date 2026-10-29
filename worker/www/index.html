@@ -3464,7 +3464,7 @@ Object.assign(BRULE,{
    phase(b,ph){b.mt=1;},draw(b){if(b.mw){ctx.globalAlpha=.25+.25*Math.sin(G.time*30);ell(ctx,b.x,b.y-b.r*.6,b.r*1.3,b.r*1.4,'#ffffff');ctx.globalAlpha=1;}
    if(G.mirrorCtl>G.time){const R=b.R;ctx.globalAlpha=.18+.08*Math.sin(G.time*8);ctx.strokeStyle='#c8e8ff';ctx.lineWidth=3;ctx.strokeRect(R.x0+2,R.y0+2,R.x1-R.x0-4,R.y1-R.y0-4);ctx.globalAlpha=1;}}}});
 // ---------- anonymous play stats: no names, no ids, nothing that leads back to a person ----------
-const STATV=163;
+const STATV=164;
 const ERRSENT=new Set();
 function statErr(err){if(ERRSENT.size>=8||!statOnWorker())return;const msg=String(err&&err.message||err||'?').slice(0,90),st=String(err&&err.stack||'').split('\n').find(l=>/:\d+:\d+/.test(l))||'',at=(st.match(/:(\d+:\d+)\)?\s*$/)||[])[1]||'';const key=msg+at;if(ERRSENT.has(key))return;ERRSENT.add(key);statPost({t:'err',msg,at});}
 addEventListener('error',e=>{try{statErr(e.error||e.message);}catch(_){}});
@@ -3572,6 +3572,76 @@ function frenzyTitleButton(cx, y) {
   S.frBtn = [x, y, w, h];
 }
 function frenzyHit(e) { const b = S.frBtn; if (!b) return false; const [x, y] = canvasXY(e); return x >= b[0] - 6 && x <= b[0] + b[2] + 6 && y >= b[1] - 6 && y <= b[1] + b[3] + 14; }
+// ---------- title screen menu: STORY and FRENZY, the unlockable modes, a big trembling title ----------
+// Buttons remember where they were drawn in device pixels, so taps match whatever transform the canvas uses.
+function devRect(x, y, w, h) { const m = ctx.getTransform(); return [x * m.a + m.e, y * m.d + m.f, w * m.a, h * m.d]; }
+function hitDev(e, r) {
+  const c = cv.getBoundingClientRect(), k = cv.width / c.width, px = (e.clientX - c.left) * k, py = (e.clientY - c.top) * (cv.height / c.height), pad = 4 * k;
+  return px >= r[0] - pad && px <= r[0] + r[2] + pad && py >= r[1] - pad && py <= r[1] + r[3] + pad;
+}
+// every letter trembles on its own, and every few seconds the whole word shudders
+function shakeText(str, cx, y, size, col, shadow, t, seed, amt) {
+  ctx.font = size + 'px Silkscreen, ui-monospace, monospace'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  const w = ctx.measureText(str).width; let x = cx - w / 2; const fr = Math.floor(t * 16);
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i], cw = ctx.measureText(ch).width; let dx = 0, dy = 0;
+    if (!reduced) { const h = Math.sin((fr + 1) * 12.9898 + i * 78.233 + seed * 31.7) * 43758.5453, r = h - Math.floor(h), r2 = (r * 7.31) % 1; dx = Math.round((r - .5) * amt); dy = Math.round((r2 - .5) * amt); }
+    ctx.fillStyle = shadow; ctx.fillText(ch, Math.round(x) + dx + 2, y + dy + 3); ctx.fillStyle = col; ctx.fillText(ch, Math.round(x) + dx, y + dy); x += cw;
+  }
+}
+function lockIcon(x, y, col) { rect(ctx, x + 1, y, 4, 1, col); rect(ctx, x, y + 1, 1, 2, col); rect(ctx, x + 5, y + 1, 1, 2, col); rect(ctx, x - 1, y + 3, 8, 5, col); rect(ctx, x + 2, y + 5, 2, 1, '#120808'); }
+function titleMenu(t, QS) {
+  const cx = Math.round(W * .3), TS = Math.max(24, Math.min(36, Math.round(H * .112))), top = Math.round(H * .03);
+  const shud = !reduced && (t % 4.6) < .22, amt = shud ? 4 : 1.6, jx = shud ? ri(-2, 2) : 0;
+  NOTR = true;
+  shakeText('TOWER', cx + jx, top, TS, QS >= 3 && QS < 5 ? '#efe4ff' : '#f6f4ee', '#3a1020', t, 0, amt);
+  shakeText('OF POOP', cx - jx, top + TS + 1, TS, '#ecd078', '#3a1a08', t, 1, amt);
+  NOTR = false;
+  let y = top + 2 * TS + 5;
+  txt('STARRING  SGT. TWO-PLY', cx, y, '#ffb0a0', 'center', 8, '#2a0a14'); y += 12;
+  // the act: there is always a sequel
+  const A = storyAct(), lab = TTX(L3('ACT ', 'ATTO ', 'ACTO ') + (A >= 3 ? 'III' : A >= 2 ? 'II' : 'I'));
+  const sub = A >= 3 ? L3('THE HEART OF THE TOWER', 'IL CUORE DELLA TORRE', 'EL CORAZÓN DE LA TORRE') : A >= 2 ? L3("THE QUEEN'S DIARY", 'IL DIARIO DELLA REGINA', 'EL DIARIO DE LA REINA') : L3("THE GENERAL'S DIARY", 'IL DIARIO DEL GENERALE', 'EL DIARIO DEL GENERAL');
+  rect(ctx, cx - 66, y, 132, 26, 'rgba(16,3,8,.78)'); rect(ctx, cx - 66, y, 132, 1, '#a01f2f'); rect(ctx, cx - 66, y + 25, 132, 1, '#a01f2f');
+  txt(lab, cx, y + 2, A >= 3 ? '#ffd23f' : A >= 2 ? '#c8a0ff' : '#ff5a4a', 'center', 13, '#2a0a14'); txt(sub, cx, y + 17, '#ecd078', 'center', 7, '#1a0a10'); y += 31;
+  S.tBtns = [];
+  const pl = .8 + .2 * Math.sin(t * 4);
+  const big = (x, w, label, base, hi, act) => {
+    rect(ctx, x - 1, y - 1, w + 2, 20, '#120408'); rect(ctx, x, y, w, 18, base); rect(ctx, x, y, w, 2, hi); rect(ctx, x, y + 16, w, 2, 'rgba(0,0,0,.35)');
+    ctx.globalAlpha = pl; txt(label, x + w / 2, y + 4, '#fff4e8', 'center', 9, '#1a0408'); ctx.globalAlpha = 1;
+    S.tBtns.push({ r: devRect(x, y, w, 18), act });
+  };
+  big(cx - 90, 86, TTX('▶ ' + L3('STORY', 'STORIA', 'HISTORIA')), '#3a2a12', '#8a6a2a', () => newGame());
+  big(cx + 4, 86, TTX('▶ ' + L3('FRENZY', 'FRENESIA', 'FRENESÍ')), '#7a1020', '#c8343e', () => startFrenzy());
+  y += 23;
+  // the modes bought at the Bastion: visible from the start, locked until paid for
+  ctx.font = '7px Silkscreen, ui-monospace, monospace';
+  const ws = MODES.map(md => Math.ceil(ctx.measureText(tr(md.name)).width) + 22), gap = 4, tot = ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1);
+  let xx = Math.round(cx - tot / 2);
+  MODES.forEach((md, i) => {
+    const own = (SV.modes || []).includes(md.id), cw = ws[i], x = xx; xx += cw + gap;
+    rect(ctx, x, y, cw, 15, own ? 'rgba(90,40,20,.9)' : 'rgba(20,12,16,.85)'); rect(ctx, x, y, cw, 1, own ? '#ffb27a' : '#4a3a40');
+    if (!own) lockIcon(x + 4, y + 4, '#8a7a7a');
+    txt(tr(md.name), x + cw / 2 + (own ? 0 : 5), y + 4, own ? '#ffd8b0' : '#8a7a7a', 'center', 7, '#000');
+    S.tBtns.push({
+      r: devRect(x, y, cw, 15), act: () => {
+        if (own) { au(); startMode(md.id); return; }
+        SFX.tink(); S.tMsg = { s: TTX(L3('Unlock it at the Bastion: ', 'Si sblocca al Baluardo: ', 'Se desbloquea en el Baluarte: ') + md.price + L3(' corn (you have ', ' mais (ne hai ', ' maíz (tienes ') + (SV.credits || 0) + ')'), t: S.t };
+      }
+    });
+  });
+  y += 19;
+  if (S.tMsg && S.t - S.tMsg.t < 3.2) txt(S.tMsg.s, cx, y, '#ffe14a', 'center', 7, '#000');
+}
+function titleTap(e) { for (const b of S.tBtns || []) if (hitDev(e, b.r)) { b.act(); return true; } return false; }
+// after a frenzy: play again or go to the Bastion
+function frenzyOverButtons(cx, y) {
+  S.oBtns = [];
+  const one = (x, w, label, base, act) => { rect(ctx, x - 1, y - 1, w + 2, 18, '#120408'); rect(ctx, x, y, w, 16, base); txt(label, x + w / 2, y + 4, '#fff4e8', 'center', 8, '#1a0408'); S.oBtns.push({ r: devRect(x, y, w, 16), act }); };
+  one(cx - 96, 92, TTX('▶ ' + L3('PLAY AGAIN', 'RIGIOCA', 'OTRA VEZ')), '#7a1020', () => startFrenzy());
+  one(cx + 4, 92, TTX(L3('BASTION', 'BALUARDO', 'BALUARTE')), '#3a2a12', () => { FADE = .8; enterHub(); });
+}
+function overTap(e) { if (!(G && G.frenzy) || performance.now() - (S.overT0 || 0) < 1500) return false; for (const b of S.oBtns || []) if (hitDev(e, b.r)) { b.act(); return true; } return false; }
 function playScene(lines,title,sub,after){S.mode='scene';S.scene={lines,i:0,ch:0,title,sub,after,right:(lines.find(l=>l[0]!=='two'&&l[0]!=='nar'&&l[0]!=='book')||['sponge'])[0]};setState();}
 function showMap(from,to,after){S.mode='map';S.mapA={from,to,t:0,after};setState();}
 function advanceStory(){
@@ -4781,6 +4851,7 @@ addEventListener('keydown',e=>{
   if(['map','scene','bossintro'].includes(S.mode)){if(e.code==='Escape')skipStory();else if(['Enter','Space','KeyE','KeyF'].includes(e.code)&&!e.repeat)advanceStory();return;}
   if(e.code==='KeyM'){if(S.mode==='play'||S.mode==='pause')togglePause();return;}
   if(S.mode==='title'&&e.code==='KeyF'){startFrenzy();return;}
+  if(S.mode==='over'&&G&&G.frenzy&&(e.code==='KeyB'||e.code==='Escape')&&performance.now()-(S.overT0||0)>1500){FADE=.8;enterHub();return;}
   if(S.mode==='title'||S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){if(e.code==='Enter'||e.code==='Space'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot')newGame();return;}
   if(e.code==='KeyP'||e.code==='Escape'){togglePause();return;}
   if(S.mode==='pause'&&(e.code==='Enter'||e.code==='Space')){togglePause();return;}
@@ -4882,7 +4953,8 @@ cv.addEventListener('pointerdown',e=>{au();
     if(S.mode==='play'&&!G.hub&&G.mmRect){const [mx,my,mw,mh]=G.mmRect,yy=y-TOPI;if(x>=mx-6&&x<=mx+mw+6&&yy>=my-4&&yy<=my+mh+6){togglePause();return;}}if(inSlot(x,y-TOPI)){if(G.wash&&S.mode==='play'&&washTry())return;openInv();return;}
     if(G.aim&&G.aim.src==='canvas'&&e.pointerType!=='mouse'){G.aim.drag=true;aimAtCanvas(e);try{cv.setPointerCapture(e.pointerId);}catch(_){}return;}}
   if(S.mode==='hub'&&hubPad()){openPad();return;}
-  if(S.mode==='title'&&frenzyHit(e)){startFrenzy();return;}
+  if(S.mode==='title'&&titleTap(e))return;
+  if(S.mode==='over'&&overTap(e))return;
   if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title'||S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){newGame();return;}
   if(S.mode==='pause'){togglePause();return;}
   if(e.pointerType==='mouse'){[mouse.x,mouse.y]=canvasXY(e);mouse.recent=4;
@@ -5927,13 +5999,9 @@ function drawTitle(){const w=Math.ceil(W),h=Math.ceil(H),t=S.t;
   ctx.save();ctx.translate(hx,hy);ctx.scale(sc,sc);ctx.drawImage(SPR.janBack,0,0);
   for(let k=0;k<2;k++){for(let j=0;j<7;j++){const yy=8+k*2+Math.round(Math.sin(t*6-j*.7+k)*(j*.25)),xx=15+j;ctx.fillStyle='#1a0e14';ctx.fillRect(xx,yy-1,1,3);ctx.fillStyle=k?'#a01f2f':'#e23a3f';ctx.fillRect(xx,yy,1,1);}}ctx.restore();titleFront(B,t,QS,sc,hx,hy,w,h);
   // titles
-  const cx=Math.round(W*.3),amp=QS===4?4.5:QS===3?3:2,shk=QS===4&&!reduced&&(t%5)<1.1?Math.round(rnd(-1,1)):0;NOTR=true;waveText('TOWER',cx+shk,Math.round(H*.06),24,QS>=3&&QS<5?'#efe4ff':'#f6f4ee','#3a1020',t,amp);waveText('OF POOP',cx-shk,Math.round(H*.06)+28,24,'#ecd078','#3a1a08',t+1,amp+1);NOTR=false;
-  txt('STARRING  SGT. TWO-PLY',cx,Math.round(H*.06)+60,'#ffb0a0','center',8,'#2a0a14');
-  try{const PRO=!(SV.pages||[]).length&&!SV.deaths&&!SV.beaten&&!(SV.maxL>1),A=PRO?0:storyAct(),y0=Math.round(H*.06)+80,pl=.75+.25*Math.sin(t*2.2);const lab=PRO?L3('PROLOGUE','PROLOGO','PRÓLOGO'):TTX(L3('ACT ','ATTO ','ACTO ')+(A>=3?'III':A>=2?'II':'I')),sub=PRO?L3('THE GOLDEN HEN','LA GALLINA D\'ORO','LA GALLINA DE ORO'):A>=3?L3('THE HEART OF THE TOWER','IL CUORE DELLA TORRE','EL CORAZÓN DE LA TORRE'):A>=2?L3("THE QUEEN'S DIARY",'IL DIARIO DELLA REGINA','EL DIARIO DE LA REINA'):L3("THE GENERAL'S DIARY",'IL DIARIO DEL GENERALE','EL DIARIO DEL GENERAL');
-    rect(ctx,cx-66,y0-6,132,34,'rgba(16,3,8,.78)');rect(ctx,cx-66,y0-6,132,1,'#a01f2f');rect(ctx,cx-66,y0+27,132,1,'#a01f2f');ctx.globalAlpha=pl;txt(lab,cx,y0-2,PRO?'#ecd078':A>=3?'#ffd23f':A>=2?'#c8a0ff':'#ff5a4a','center',16,'#2a0a14');ctx.globalAlpha=1;txt(sub,cx,y0+17,'#ecd078','center',8,'#1a0a10');}catch(e){}
-  try{frenzyTitleButton(Math.round(W*.3),Math.round(H*.06)+56*1+60);}catch(e){}
+  try{titleMenu(t,QS);}catch(e){reportErr(e);}
   const tag=TAGS[Math.floor(t/2.6)%TAGS.length];txt(tag,Math.round(W*.7),H-40,'#ecd078','center',8,'#1a0a10');
-  if(Math.floor(t*2)%2===0)txt(isTouch?'TAP TO START':'PRESS ENTER OR CLICK',Math.round(W*.7),H-26,'#ffe14a','center');
+  if(!isTouch)txt(TTX(L3('ENTER: STORY  ·  F: FRENZY','INVIO: STORIA  ·  F: FRENESIA','INTRO: HISTORIA  ·  F: FRENESÍ')),Math.round(W*.7),H-26,'#ffe14a','center',7,'#000');
   txt(best.floor?'BEST  '+zoneLabel(best.floor)+'  ·  '+best.score:'THE HEN TOOK OVER THE COOP',Math.round(W*.7),H-13,'#7fd8ff','center');}
 
 function drawTitleOld(){if(!titleBG){const m={W:18,H:18,T:new Uint8Array(324)};for(let y=0;y<18;y++)for(let x=0;x<18;x++){const edge=x===0||y===0||x===17||y<3||y===17;m.T[y*18+x]=edge?0:1;}
@@ -5999,7 +6067,7 @@ function drawOverRoll(){const I=overInfo(),t=(performance.now()-(S.overT0||0))/1
   for(let k=0;k<8;k++){const xx=x0+6+((k*RW/8+spin*6)%(RW-12));rect(ctx,xx,ry-6,1,16,'#e6dfcc');}
   for(const sd of [-1,1]){const ex=sd<0?x0+3:x0+RW-3;ell(ctx,ex,ry+2,4,10,'#e8e2d0');ell(ctx,ex,ry+2,2.2,5,'#8a6a4a');ell(ctx,ex,ry+2,1.2,3,'#3a2414');}
   rect(ctx,cx-30,ry-6,60,4,'#d8262e');
-  if(done&&Math.floor(t*2)%2===0)txt(G&&G.frenzy?TTX(isTouch?L3('TAP TO PLAY AGAIN','TOCCA PER RIGIOCARE','TOCA PARA JUGAR OTRA VEZ'):L3('ENTER TO PLAY AGAIN','INVIO PER RIGIOCARE','INTRO PARA JUGAR OTRA VEZ')):isTouch?(it?'TOCCA PER TORNARE AL BALUARDO':T_('TAP TO RETURN TO THE LAST BASTION')):(it?'INVIO PER TORNARE AL BALUARDO':T_('ENTER TO RETURN TO THE LAST BASTION')),cx,H-14,'#ffe14a','center',8,'#000');}
+  if(done&&G&&G.frenzy)frenzyOverButtons(cx,H-36);if(done&&Math.floor(t*2)%2===0)txt(G&&G.frenzy?TTX(isTouch?'':L3('ENTER: PLAY AGAIN  ·  B: BASTION','INVIO: RIGIOCA  ·  B: BALUARDO','INTRO: OTRA VEZ  ·  B: BALUARTE')):isTouch?(it?'TOCCA PER TORNARE AL BALUARDO':T_('TAP TO RETURN TO THE LAST BASTION')):(it?'INVIO PER TORNARE AL BALUARDO':T_('ENTER TO RETURN TO THE LAST BASTION')),cx,H-14,'#ffe14a','center',8,'#000');}
 function drawOver(){rect(ctx,0,0,W,H,'rgba(14,8,5,.82)');if(G.frenzy&&G.frenzy.win){txt(L3('TIME!','TEMPO!','¡TIEMPO!'),144,64,'#ffe14a','center',16);txt(L3('You survived the frenzy','Sei sopravvissuto alla frenesia','Sobreviviste al frenesí'),144,86,'#c8b090','center');}else{txt('FLUSHED!',144,64,'#ff4a5a','center',16);txt(G.char.name+' is out of sheets',144,86,'#c8b090','center');}
   txt(G.frenzy?TTX((G.frenzy.win?L3('SURVIVED 3:00','SOPRAVVISSUTO 3:00','SOBREVIVISTE 3:00'):L3('Lasted ','Resistito ','Aguantaste ')+fmtTime(G.frenzy.el))+(G.frRec?L3('  NEW BEST!','  NUOVO RECORD!','  ¡NUEVO RÉCORD!'):'')):G.surv?'Survived to  WAVE '+G.wave+(G.survRec?'  NEW BEST!':''):'Reached  '+zoneLabel(G.floor)+(G.hard?'  (HARDCORE)':G.rush?'  (BOSS RUSH)':''),144,110,G.survRec?'#ffe14a':'#f4f4f0','center');txt('Score  '+G.score,144,124,'#f4f4f0','center');
   const R=G.recap;if(R&&R.by)txt('Flushed by  '+R.by,144,136,'#ff9a8a','center');
