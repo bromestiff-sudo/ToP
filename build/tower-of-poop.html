@@ -3436,7 +3436,7 @@ Object.assign(BRULE,{
    phase(b,ph){b.mt=1;},draw(b){if(b.mw){ctx.globalAlpha=.25+.25*Math.sin(G.time*30);ell(ctx,b.x,b.y-b.r*.6,b.r*1.3,b.r*1.4,'#ffffff');ctx.globalAlpha=1;}
    if(G.mirrorCtl>G.time){const R=b.R;ctx.globalAlpha=.18+.08*Math.sin(G.time*8);ctx.strokeStyle='#c8e8ff';ctx.lineWidth=3;ctx.strokeRect(R.x0+2,R.y0+2,R.x1-R.x0-4,R.y1-R.y0-4);ctx.globalAlpha=1;}}}});
 // ---------- anonymous play stats: no names, no ids, nothing that leads back to a person ----------
-const STATV=166;
+const STATV=167;
 const ERRSENT=new Set();
 function statErr(err){if(ERRSENT.size>=8||!statOnWorker())return;const msg=String(err&&err.message||err||'?').slice(0,90),st=String(err&&err.stack||'').split('\n').find(l=>/:\d+:\d+/.test(l))||'',at=(st.match(/:(\d+:\d+)\)?\s*$/)||[])[1]||'';const key=msg+at;if(ERRSENT.has(key))return;ERRSENT.add(key);statPost({t:'err',msg,at});}
 addEventListener('error',e=>{try{statErr(e.error||e.message);}catch(_){}});
@@ -4972,7 +4972,7 @@ cv.addEventListener('pointerdown',e=>{au();
   if(S.mode==='hub'&&hubPad()){openPad();return;}
   if(S.mode==='title'&&titleTap(e))return;
   if(S.mode==='over'&&overTap(e))return;
-  if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title'||S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){newGame();return;}
+  if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title')return;if(S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){newGame();return;}
   if(S.mode==='pause'){togglePause();return;}
   if(e.pointerType==='mouse'){[mouse.x,mouse.y]=canvasXY(e);mouse.recent=4;
     if(e.button===2){if(S.mode==='play'||S.mode==='hub'){startAim('mouse',e);try{cv.setPointerCapture(e.pointerId);}catch(_){}}return;}
@@ -4988,7 +4988,7 @@ function bindStick(id,st){const el=document.getElementById(id),knob=el.querySele
     const m=Math.min(1,d/max);st.m=m<.18?0:m;st.x=d?dx/Math.hypot(dx,dy):0;st.y=d?dy/Math.hypot(dx,dy):0;
     knob.style.transform=`translate(${dx}px,${dy}px)`;};
   const end=()=>{pid=null;st.m=0;st.x=0;st.y=0;knob.style.transform='';el.classList.remove('on');};
-  el.addEventListener('pointerdown',e=>{e.preventDefault();au();if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title'||S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){newGame();return;}
+  el.addEventListener('pointerdown',e=>{e.preventDefault();au();if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title')return;if(S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){newGame();return;}
     pid=e.pointerId;try{el.setPointerCapture(pid);}catch(_){}el.classList.add('on');upd(e);});
   el.addEventListener('pointermove',e=>{if(e.pointerId===pid)upd(e);});
   el.addEventListener('pointerup',e=>{if(e.pointerId===pid)end();});
@@ -4997,7 +4997,7 @@ function bindStick(id,st){const el=document.getElementById(id),knob=el.querySele
 bindStick('stickL',stick.L);bindStick('stickR',stick.R);
 document.querySelectorAll('.pad button').forEach(b=>{
   b.addEventListener('pointerdown',e=>{e.preventDefault();au();b.classList.add('on');const k=b.dataset.k;
-    if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title'||S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){if(k!=='pause'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot')newGame();return;}
+    if(['map','scene','bossintro'].includes(S.mode)){advanceStory();return;}if(S.mode==='title'){b.classList.remove('on');return;}if(S.mode==='over'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot'){if(k!=='pause'||S.mode==='splash'||S.mode==='cine'||S.mode==='boot')newGame();return;}
     if(S.mode==='menu')return;if(S.mode==='hub'&&hubPad()&&(k==='soap'||k==='wall')){openPad();return;}
     if(k==='pause')togglePause();else if(S.mode==='play'||S.mode==='hub'){if(k==='item')useActive();else if(k==='tear')tearSheet();else if(k==='dash')G.wantDash=true;else if(k==='swap'){b._lp=false;clearTimeout(b._t);b._t=setTimeout(()=>{b._lp=true;openInv();},450);}else if(k==='soap'){if(G.aim&&G.aim.src==='canvas')releaseAim();else{startAim('btn',e);try{b.setPointerCapture(e.pointerId);}catch(_){}}}else if(k==='wall')wallHeld=true;}});
   if(b.dataset.k==='soap'){b.addEventListener('pointermove',e=>{if(G&&G.aim&&G.aim.src==='btn')aimDragBtn(e);});
