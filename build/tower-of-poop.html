@@ -89,7 +89,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;backg
 .touch.land .bar button,.touch.land .bar a{font-size:10px;padding:4px 6px;text-align:center;white-space:normal}
 .touch.land[data-state="play"] .bar,.touch.land[data-state="dying"] .bar{display:none}
 .touch.land[data-state="scene"] .pad,.touch.land[data-state="scene"] .bar,.touch[data-state="qtitle"] .pad,.touch.land[data-state="over"] .pad,.touch[data-state="mg"] .pad,.touch[data-state="mg"] .bar,.touch[data-state="qtitle"] .bar,.touch.land[data-state="title"] .pad,.touch.land[data-state="splash"] .pad,.touch.land[data-state="cine"] .pad,.touch.land[data-state="boot"] .pad,.touch[data-state="boot"] .bar,.touch[data-state="splash"] .bar,.touch[data-state="lang"] .bar,.touch[data-state="lang"] .pad,.touch[data-state="cine"] .bar{display:none}
-.touch.land[data-state="title"] .bar{top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.touch.land[data-state="title"] .bar{top:calc(8px + env(safe-area-inset-top,0px));bottom:auto;left:auto;right:max(10px,env(safe-area-inset-right,0px))}
 @media (prefers-reduced-motion:reduce){.bar a.hot{animation:none}}
 #iosHint{display:none;position:fixed;z-index:70;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));box-sizing:border-box;
   background:rgba(14,8,5,.96);border:3px solid #ffe14a;box-shadow:0 0 0 3px #000,0 0 28px rgba(255,225,74,.35);color:#f4f4f0;font-family:Silkscreen,ui-monospace,monospace;padding:12px 14px 10px;animation:ihPulse 1.6s ease-in-out infinite}
@@ -3436,7 +3436,7 @@ Object.assign(BRULE,{
    phase(b,ph){b.mt=1;},draw(b){if(b.mw){ctx.globalAlpha=.25+.25*Math.sin(G.time*30);ell(ctx,b.x,b.y-b.r*.6,b.r*1.3,b.r*1.4,'#ffffff');ctx.globalAlpha=1;}
    if(G.mirrorCtl>G.time){const R=b.R;ctx.globalAlpha=.18+.08*Math.sin(G.time*8);ctx.strokeStyle='#c8e8ff';ctx.lineWidth=3;ctx.strokeRect(R.x0+2,R.y0+2,R.x1-R.x0-4,R.y1-R.y0-4);ctx.globalAlpha=1;}}}});
 // ---------- anonymous play stats: no names, no ids, nothing that leads back to a person ----------
-const STATV=165;
+const STATV=166;
 const ERRSENT=new Set();
 function statErr(err){if(ERRSENT.size>=8||!statOnWorker())return;const msg=String(err&&err.message||err||'?').slice(0,90),st=String(err&&err.stack||'').split('\n').find(l=>/:\d+:\d+/.test(l))||'',at=(st.match(/:(\d+:\d+)\)?\s*$/)||[])[1]||'';const key=msg+at;if(ERRSENT.has(key))return;ERRSENT.add(key);statPost({t:'err',msg,at});}
 addEventListener('error',e=>{try{statErr(e.error||e.message);}catch(_){}});
@@ -4134,6 +4134,7 @@ function openPad(){const p=hubPad();if(!p)return;SFX.pick();if(G.mess){messPad(p
     const runs=[1].concat(SHORTCUTS.filter(f=>SV.shortcuts.includes(f))).map(L=>({
       label:L===1?'THE FIELDS':'FLOOR '+L+' (LIFT)',right:L===1?'FARM 1':ZONES[zoneOf(L)].replace('THE ',''),col:'#f4f4f0',
       desc:who+(L>1?' Bonus: +1 soap.':'')+(SV.run?' Starting a new run deletes your saved run.':''),act(){startRun(L);}}));
+    runs.push({label:TTX(L3('FRENZY','FRENESIA','FRENESÍ')),right:TTX(L3('3 MIN','3 MIN','3 MIN')),col:'#ff8a7a',desc:TTX(L3('Three minutes in the arena: a random gun, enemies that never come in the same order, a twist every 30 seconds.','Tre minuti nell\'arena: un\'arma a caso, nemici mai nello stesso ordine, un imprevisto ogni 30 secondi.','Tres minutos en la arena: un arma al azar, enemigos nunca en el mismo orden, un imprevisto cada 30 segundos.')+(SV.best&&SV.best.frenzy?L3(' Best: ',' Record: ',' Récord: ')+SV.best.frenzy:'')),act(){startFrenzy();}});
     runs.push({label:'ONLINE CO-OP',right:'2 PLAYERS',col:'#7fffd4',desc:coopAvailable()?'Play with a friend on another phone: one creates the game and gets a code, the other joins with it.':'Online co-op works in the game app opened from its own link, not here.',act(){if(!coopAvailable()){SFX.tink();refreshMenu('Open the game from its own link to play co-op.');return;}coopMenu();}});
     if(SV.run)runs.unshift({label:'RESUME SAVED RUN',right:zoneLabel(SV.run.floor),col:'#7fd8ff',desc:'Pick up where you saved, at the start of this floor.',act(){closeMenu();resumeRun();}});
     const extra=[];
