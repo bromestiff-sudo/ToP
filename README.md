@@ -58,6 +58,9 @@ Screenshots go to `tests/out/`.
 
 The full story and world rules live in the Lore Bible (separate document).
 
+## Music
+The title screen plays `worker/www/music/opening.mp3` (the opening song, made with Suno from the in-game title theme), loaded by `src/opening.js`. Until it is loaded, and everywhere else, the music is the synthesized soundtrack.
+
 ## Tone
 Since v168 the texts are serious and dark (`src/tone_v168.py`, applied by `src/patch_v168.py`): the enemies are the tower's *spawn* (IT *larve*, ES *engendros*), and only Two-Ply's lines keep a dry irony. Boss, weapon, item and place names stayed as they were.
 

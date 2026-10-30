@@ -1103,7 +1103,7 @@ function drumHit(c,t,vol=1){const B=DBUS;
   if(c==='o')noiseHit(t,.18,.05*vol,'highpass',7500,null,B);}
 const mus={song:null,step:0,next:0,loops:0,inten:1,target:1};
 function setSong(n){if(n&&!SONGS[n])n=null;if(mus.song===n)return;stopBuf();mus.song=n;mus.step=0;mus.loops=0;if(AC){mus.next=AC.currentTime+.05;const r=n&&MR.cache.get(n);if(r&&!muted)startSongBuf(r,mus.next);}}
-function songFor(){const m=S.mode;if(m==='boot')return null;if(m==='splash'||m==='lang')return null;if(m==='title'||m==='cine'){const q=typeof titleStage==='function'?titleStage():0;return q?'title'+q:'title';}if(m==='over')return 'over';
+function songFor(){const m=S.mode;if(openWant())return null;if(m==='boot')return null;if(m==='splash'||m==='lang')return null;if(m==='title'||m==='cine'){const q=typeof titleStage==='function'?titleStage():0;return q?'title'+q:'title';}if(m==='over')return 'over';
   if(m==='scene')return S.scene&&S.scene.title==='EPILOGUE'?'victory':'story';if(m==='map')return 'story';if(!G)return null;
   const bi=m==='bossintro'?S.bi.i:G.boss&&G.boss.state!=='dying'?G.boss.idx:-1;
   if(bi>=0&&['bossintro','play','menu','inv'].includes(m)){const t=BOSSDEFS[bi].tier;return t===6?'queen':t>=3?'boss2':'boss';}
@@ -3437,7 +3437,7 @@ Object.assign(BRULE,{
    phase(b,ph){b.mt=1;},draw(b){if(b.mw){ctx.globalAlpha=.25+.25*Math.sin(G.time*30);ell(ctx,b.x,b.y-b.r*.6,b.r*1.3,b.r*1.4,'#ffffff');ctx.globalAlpha=1;}
    if(G.mirrorCtl>G.time){const R=b.R;ctx.globalAlpha=.18+.08*Math.sin(G.time*8);ctx.strokeStyle='#c8e8ff';ctx.lineWidth=3;ctx.strokeRect(R.x0+2,R.y0+2,R.x1-R.x0-4,R.y1-R.y0-4);ctx.globalAlpha=1;}}}});
 // ---------- anonymous play stats: no names, no ids, nothing that leads back to a person ----------
-const STATV=168;
+const STATV=169;
 const ERRSENT=new Set();
 function statErr(err){if(ERRSENT.size>=8||!statOnWorker())return;const msg=String(err&&err.message||err||'?').slice(0,90),st=String(err&&err.stack||'').split('\n').find(l=>/:\d+:\d+/.test(l))||'',at=(st.match(/:(\d+:\d+)\)?\s*$/)||[])[1]||'';const key=msg+at;if(ERRSENT.has(key))return;ERRSENT.add(key);statPost({t:'err',msg,at});}
 addEventListener('error',e=>{try{statErr(e.error||e.message);}catch(_){}});
@@ -3663,6 +3663,33 @@ function titleAura(B, t, h) {
   }
   ctx.restore();
 }
+// ---------- the opening song on the title screen (music/opening.mp3) ----------
+// Decoded once into the Web Audio graph, so the Sound button (master gain) mutes it like everything else.
+// While it is not loaded (offline first visit, file:// builds) the synthesized title tune keeps playing.
+const OPEN = { buf: null, src: null, g: null, load: 0 };
+function openLoad() {
+  if (OPEN.load || !AC) return; OPEN.load = 1;
+  fetch('music/opening.mp3').then(r => { if (!r.ok) throw new Error('no opening'); return r.arrayBuffer(); })
+    .then(a => new Promise((ok, ko) => AC.decodeAudioData(a, ok, ko)))
+    .then(b => { OPEN.buf = b; })
+    .catch(() => { OPEN.load = 2; });
+}
+function openWant() { return !!OPEN.buf && S.mode === 'title'; }
+function openTick() {
+  if (!AC || !master) return;
+  openLoad();
+  const want = openWant(), t = AC.currentTime;
+  if (want && !OPEN.src) {
+    const g = AC.createGain(), src = AC.createBufferSource();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.9, t + 1.2);
+    src.buffer = OPEN.buf; src.loop = true; src.connect(g); g.connect(master); src.start(t);
+    OPEN.src = src; OPEN.g = g;
+  } else if (!want && OPEN.src) {
+    const src = OPEN.src, g = OPEN.g; OPEN.src = OPEN.g = null;
+    try { g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + .6); src.stop(t + .7); } catch (e) { }
+  }
+}
+
 function playScene(lines,title,sub,after){S.mode='scene';S.scene={lines,i:0,ch:0,title,sub,after,right:(lines.find(l=>l[0]!=='two'&&l[0]!=='nar'&&l[0]!=='book')||['sponge'])[0]};setState();}
 function showMap(from,to,after){S.mode='map';S.mapA={from,to,t:0,after};setState();}
 function advanceStory(){
@@ -6244,7 +6271,7 @@ function frame(now){const dt=clamp((now-last)/1000,0,1/30);last=now;try{gpPoll(d
   if(G&&!G.coopGuest&&!CTL.edit&&!(isTouch&&innerHeight>innerWidth)&&(S.mode==='play'||S.mode==='dying'||S.mode==='hub')){if(G.hs>0)G.hs-=dt;else{try{step(G.aim?dt*.4:dt);}catch(err){reportErr(err);}}}
   if(ERR.t>0)ERR.t-=dt;
   setSong(songFor());mus.target=!G||S.mode==='title'?1:(S.mode==='bossintro'||G.boss||G.surv||G.active)?1:.45;
-  try{musicTick();draw();}catch(err){reportErr(err);try{ctx.restore();}catch(_){}}requestAnimationFrame(frame);}
+  try{musicTick();try{openTick();}catch(e){}draw();}catch(err){reportErr(err);try{ctx.restore();}catch(_){}}requestAnimationFrame(frame);}
 function fit(){const land=isTouch&&innerWidth>innerHeight;document.body.classList.toggle('land',land);
   // measure the real free space (safe areas, browser bars, controls) instead of trusting innerHeight
   const st=document.getElementById('stage'),padEl=document.getElementById('pad'),barEl=document.getElementById('bar');
