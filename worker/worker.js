@@ -1,4 +1,4 @@
-// Tower of Poop — Cloudflare Worker: serves the game, relays co-op rooms and keeps anonymous play stats.
+// Coop of Despair — Cloudflare Worker: serves the game, relays co-op rooms and keeps anonymous play stats.
 
 // ---------- co-op: each 4-letter room code is one Durable Object that relays messages between the two players ----------
 const MSG_MAX = 512 * 1024;   // one message (the host sends whole floors, so not tiny)
@@ -137,12 +137,12 @@ function statsPage(S) {
   const last = S.last.slice(0, 30).map(r => `<tr><td>${r.d}</td><td>${esc(r.m)}</td><td>${esc(r.c)}</td><td>${r.f}</td><td>${r.w ? 'win' : esc(r.k)}</td><td>${Math.round(r.s / 60)} min</td><td>${r.a}</td><td>${esc(r.l)}</td></tr>`).join('');
   const errs = Object.entries(S.errs || {}).sort((a, b) => b[1] - a[1]).slice(0, 25).map(([k, v]) => `<div class=row><span title="${esc(k)}">${esc(k)}</span><i style="width:${Math.round(v / Math.max(1, ...Object.values(S.errs)) * 100)}%"></i><b>${v}</b></div>`).join('') || '<p class=m>no errors</p>';
   const avg = S.ends ? Math.round(S.secs / S.ends / 60) : 0;
-  return `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Tower of Poop · stats</title>
+  return `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Coop of Despair · stats</title>
 <style>body{margin:0;background:#140a0c;color:#efe6d8;font:15px/1.4 system-ui,sans-serif}main{max-width:900px;margin:auto;padding:20px 16px}h1{color:#ecd078;margin:0 0 4px}h2{font-size:14px;color:#ff8a7a;text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
 .k{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0}.k div{background:#24121a;border-radius:8px;padding:10px}.k b{display:block;font-size:24px;color:#ecd078}.k span{font-size:12px;color:#b8a898}
 .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}section{background:#1e0f15;border-radius:8px;padding:12px}.row{display:grid;grid-template-columns:minmax(0,1fr) 90px 40px;gap:8px;align-items:center;font-size:13px;margin:3px 0}.row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row i{display:block;height:8px;background:#a01f2f;border-radius:4px}.row b{text-align:right}
 table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px 6px;border-bottom:1px solid #33202a;text-align:left}.m,.n{color:#b8a898;font-size:12px}.w{overflow-x:auto}</style>
-<main><h1>Tower of Poop</h1><p class=n>Anonymous stats since ${new Date(S.since).toISOString().slice(0, 10)}. No personal data: only runs, floors, characters and bosses. JSON: <a style="color:#7fd8ff" href="?format=json">?format=json</a></p>
+<main><h1>Coop of Despair</h1><p class=n>Anonymous stats since ${new Date(S.since).toISOString().slice(0, 10)}. No personal data: only runs, floors, characters and bosses. JSON: <a style="color:#7fd8ff" href="?format=json">?format=json</a></p>
 <div class=k><div><b>${S.starts}</b><span>runs started</span></div><div><b>${S.ends}</b><span>runs finished</span></div><div><b>${S.wins}</b><span>wins</span></div><div><b>${avg} min</b><span>average length</span></div><div><b>${S.starts ? Math.round(S.touch / S.starts * 100) : 0}%</b><span>on touch</span></div></div>
 <div class=g>${tbl('Floor reached', fl)}${tbl('Killed by', S.causes, 15)}${tbl('Character', S.chars)}${tbl('Bosses beaten', S.bosses, 40)}${tbl('Mode', S.modes)}${tbl('Act', S.acts)}${tbl('Language', S.langs)}${tbl('Version', S.vers)}</div>
 <section style="margin-top:14px"><h2>Player errors</h2>${errs}</section>
@@ -176,7 +176,7 @@ async function pbkdf2(pw, salt) {
 }
 function formPage(title, text, action, fields, err, status = 200) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const body = `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Tower of Poop · ${esc(title)}</title>
+  const body = `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Coop of Despair · ${esc(title)}</title>
 <style>body{margin:0;background:#140a0c;color:#efe6d8;font:16px/1.45 system-ui,sans-serif}main{max-width:420px;margin:12vh auto;padding:0 16px}h1{color:#ecd078;font-size:24px;margin:0 0 8px}p{color:#c8b8a8}label{display:block;margin:14px 0 4px;font-size:14px}input{width:100%;box-sizing:border-box;padding:10px;border-radius:6px;border:1px solid #5a3a40;background:#24121a;color:#efe6d8;font-size:16px}button{margin-top:18px;width:100%;padding:11px;border:0;border-radius:6px;background:#a01f2f;color:#fff;font-size:16px;cursor:pointer}.e{color:#ff8a7a}</style>
 <main><h1>${esc(title)}</h1><p>${esc(text)}</p>${err ? `<p class=e>${esc(err)}</p>` : ''}<form method=post action="${action}">${fields.map(f => `<label for=${f[0]}>${esc(f[1])}</label><input id=${f[0]} name=${f[0]} type=password autocomplete=${f[2]} minlength=8 required>`).join('')}<button type=submit>${esc(title)}</button></form></main></html>`;
   return new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'" } });
@@ -225,13 +225,13 @@ export default {
       const mat = env.STATS_KEY ? st.mat : 'h:' + st.mat;
       if (url.pathname === '/stats/login' && req.method === 'POST') {
         const f = await req.formData(), r = await check(String(f.get('pw') || ''));
-        if (!r.ok) return formPage('Sign in', 'Tower of Poop stats.', '/stats/login', [['pw', 'Password', 'current-password']], why(r), 403);
+        if (!r.ok) return formPage('Sign in', 'Coop of Despair stats.', '/stats/login', [['pw', 'Password', 'current-password']], why(r), 403);
         return signedIn(mat, '/stats')();
       }
       const k = url.searchParams.get('k');
       if (k != null) { const r = await check(k); if (!r.ok) return plain(why(r), 403); return signedIn(mat, back)(); }
       const ck = (req.headers.get('Cookie') || '').match(/(?:^|;\s*)tops=([0-9a-f]+)/);
-      if (!ck || !same(ck[1], await sha('stats:' + mat))) return formPage('Sign in', 'Tower of Poop stats.', '/stats/login', [['pw', 'Password', 'current-password']]);
+      if (!ck || !same(ck[1], await sha('stats:' + mat))) return formPage('Sign in', 'Coop of Despair stats.', '/stats/login', [['pw', 'Password', 'current-password']]);
       const r = await DO.fetch(new Request(url.origin + '/stats' + url.search, { method: 'GET' }));
       return secure(r, url);
     }

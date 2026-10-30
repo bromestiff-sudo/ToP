@@ -1,7 +1,10 @@
-# Tower of Poop
+# Coop of Despair
 
-Top-down pixel-art roguelike: a roll of toilet paper against a tower of poop and its hens.
-It looks like a kids' game. It isn't.
+Top-down pixel-art roguelike: Sgt. Two-Ply, a roll of toilet paper, climbs a living tower raised by the Golden Hen.
+The tower breathes, digests whoever goes in and births its spawn; the Queen at the top is not what she seems.
+The world is dark. The only light touch is the hero himself.
+
+(Formerly *Tower of Poop*: the files and the repository keep the old name.)
 
 ## How it is built
 The game is **a single HTML file** (`build/tower-of-poop.html`), generated from the sources in `src/`:
@@ -54,6 +57,9 @@ Screenshots go to `tests/out/`.
 3. Commit and push: Cloudflare deploys it.
 
 The full story and world rules live in the Lore Bible (separate document).
+
+## Tone
+Since v168 the texts are serious and dark (`src/tone_v168.py`, applied by `src/patch_v168.py`): the enemies are the tower's *spawn* (IT *larve*, ES *engendros*), and only Two-Ply's lines keep a dry irony. Boss, weapon, item and place names stayed as they were.
 
 ## Game modes
 - **Story**: the tower, the Bastion, the acts (Prologue, I, II, III).

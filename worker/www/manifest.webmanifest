@@ -1,6 +1,6 @@
 {
- "name": "Tower of Poop",
- "short_name": "Tower of Poop",
+ "name": "Coop of Despair",
+ "short_name": "Coop of Despair",
  "id": "/",
  "start_url": "/",
  "scope": "/",
@@ -16,7 +16,7 @@
  "categories": [
   "games"
  ],
- "description": "Un roguelike sparatutto: un rotolo di carta igienica contro la torre-pollaio.",
+ "description": "Un roguelike sparatutto cupo: un rotolo di carta igienica contro una torre viva.",
  "icons": [
   {
    "src": "icons/icon-192.png",

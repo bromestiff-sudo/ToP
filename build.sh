@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds Tower of Poop from the sources.
+# Builds Coop of Despair from the sources.
 #   ./build.sh            -> build/tower-of-poop.html (the single-file game) + build/tw.html (test build)
 #   ./build.sh 162        -> also refreshes worker/www/index.html and the app cache version (v162)
 set -e

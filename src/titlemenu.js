@@ -1,4 +1,4 @@
-// ---------- title screen menu: STORY and FRENZY, the unlockable modes, a big trembling title ----------
+// ---------- title screen menu: STORY and FRENZY, the unlockable modes, a big trembling COOP OF DESPAIR ----------
 // Buttons remember where they were drawn in device pixels, so taps match whatever transform the canvas uses.
 function devRect(x, y, w, h) { const m = ctx.getTransform(); return [x * m.a + m.e, y * m.d + m.f, w * m.a, h * m.d]; }
 function hitDev(e, r) {
@@ -17,11 +17,15 @@ function shakeText(str, cx, y, size, col, shadow, t, seed, amt) {
 }
 function lockIcon(x, y, col) { rect(ctx, x + 1, y, 4, 1, col); rect(ctx, x, y + 1, 1, 2, col); rect(ctx, x + 5, y + 1, 1, 2, col); rect(ctx, x - 1, y + 3, 8, 5, col); rect(ctx, x + 2, y + 5, 2, 1, '#120808'); }
 function titleMenu(t, QS) {
-  const cx = Math.round(W * .3), TS = Math.max(24, Math.min(36, Math.round(H * .112))), top = Math.round(H * .03);
+  const cx = Math.round(W * .3), top = Math.round(H * .03);
+  // the longest word must fit in the left part of the screen
+  let TS = Math.max(24, Math.min(36, Math.round(H * .112)));
+  ctx.font = TS + 'px Silkscreen, ui-monospace, monospace'; const ww = ctx.measureText('OF DESPAIR').width;
+  if (ww > W * .56) TS = Math.max(16, Math.floor(TS * W * .56 / ww));
   const shud = !reduced && (t % 4.6) < .22, amt = shud ? 4 : 1.6, jx = shud ? ri(-2, 2) : 0;
   NOTR = true;
-  shakeText('TOWER', cx + jx, top, TS, QS >= 3 && QS < 5 ? '#efe4ff' : '#f6f4ee', '#3a1020', t, 0, amt);
-  shakeText('OF POOP', cx - jx, top + TS + 1, TS, '#ecd078', '#3a1a08', t, 1, amt);
+  shakeText('COOP', cx + jx, top, TS, QS >= 3 && QS < 5 ? '#efe4ff' : '#e8e2d8', '#2a0610', t, 0, amt);
+  shakeText('OF DESPAIR', cx - jx, top + TS + 1, TS, '#b8202e', '#1a0206', t, 1, amt);
   NOTR = false;
   let y = top + 2 * TS + 5;
   txt('STARRING  SGT. TWO-PLY', cx, y, '#ffb0a0', 'center', 8, '#2a0a14'); y += 12;

@@ -1,4 +1,4 @@
-TOWER OF POOP — app + online co-op + stats (Cloudflare Worker)
+COOP OF DESPAIR — app + online co-op + stats (Cloudflare Worker)
 ===============================================================
 
 This folder contains:

@@ -13,7 +13,7 @@ for d in sorted(x for x in os.listdir('.') if os.path.isdir(x) and x != 'preview
         x = (k % cols) * cell; y = (k // cols) * (cell + 14); b = i.resize((i.width * S, i.height * S), Image.NEAREST)
         sheet.alpha_composite(b, (x + (cell - b.width) // 2, y + (cell - b.height) // 2)); dr.text((x + 4, y + cell), n.replace('_f1.png', '').replace('.png', '')[:22], fill=(236, 208, 120, 255))
     sheet.save(f'preview-x4/{d}.png')
-open('README.txt', 'w').write("""TOWER OF POOP - sprite references for PixelLab
+open('README.txt', 'w').write("""COOP OF DESPAIR - sprite references for PixelLab
 ================================================
 Every sprite currently in the game, exported at its NATIVE size (1 game pixel = 1 image pixel),
 with transparent background. Animated sprites have one file per frame (_f1, _f2, ...).

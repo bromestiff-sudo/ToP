@@ -1,4 +1,4 @@
-TOWER OF POOP - sprite references for PixelLab
+COOP OF DESPAIR - sprite references for PixelLab
 ================================================
 Every sprite currently in the game, exported at its NATIVE size (1 game pixel = 1 image pixel),
 with transparent background. Animated sprites have one file per frame (_f1, _f2, ...).

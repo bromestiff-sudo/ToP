@@ -7,6 +7,8 @@ const OG=path.resolve(__dirname,'../build/tw_og.html');{let s=fs.readFileSync(pa
  s=s.replace(a,"const sc=Math.max(1,Math.round(h/150))*(window.__OGS||1),hx=Math.round(window.__OGX!=null?B.cx1+window.__OGX*Math.max(1,Math.round(h/150)):B.cx1*.78),hy=B.ctop-24*sc+2*sc+(window.__OGY||0);");
  if(!s.includes('  S.tBtns = [];'))throw new Error('title menu line not found');
  s=s.replace('  S.tBtns = [];','  if(window.__OGM)return;S.tBtns = [];');
+ // use the bundled Silkscreen font (the Google Fonts link is not reachable everywhere)
+ const fd=path.resolve(__dirname,'../worker/www/fonts');s=s.replace('</title>','</title><style>'+fs.readdirSync(fd).filter(f=>/silkscreen.*\.woff2$/.test(f)).map(f=>"@font-face{font-family:'Silkscreen';font-weight:"+(f.includes('700')?700:400)+";src:url(data:font/woff2;base64,"+fs.readFileSync(path.join(fd,f)).toString('base64')+") format('woff2')}").join('')+'</style>');
  fs.writeFileSync(OG,s);}
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
 const [S,X,Y,T]=process.argv.slice(2).map(Number);
